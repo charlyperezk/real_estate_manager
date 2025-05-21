@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from ...seedwork.domain.value_objects import ValueObject
+from src.seedwork.domain.value_objects import ValueObject
 
 @dataclass(frozen=True)
 class Fee(ValueObject):

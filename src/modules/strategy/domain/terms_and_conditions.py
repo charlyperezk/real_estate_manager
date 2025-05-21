@@ -1,6 +1,6 @@
 from typing import List
 from dataclasses import dataclass, field
-from ..seedwork.domain.mixins import check_rule
+from src.seedwork.domain.mixins import check_rule
 from .value_objects.term import Term, TermType, TermIdentifier
 from .exceptions import TermNotFound
 from .rules import TermTypeMustNotAlreadyBeInTerms
@@ -21,14 +21,19 @@ class TermsAndConditions:
         self.registered_terms = len(self.get_terms())
 
     @auto_refresh_terms
-    def register_term(self, term: Term) -> None: #TODO: Check rules
+    def register_term(self, term: Term) -> None:
         check_rule(TermTypeMustNotAlreadyBeInTerms(identifier=term.type, terms=self.terms))
         self.terms.append(term)
 
     @auto_refresh_terms
-    def unregister_term(self, term_type: TermIdentifier) -> None: #TODO: Check rules
+    def unregister_term(self, term_type: TermIdentifier) -> None:
         term_founded = self.get_term_by_type(term_type)
         self.terms = [term_founded.deactivated() if term.type == term_type else term for term in self.terms]
+
+    @auto_refresh_terms
+    def delete_term(self, term_type: TermIdentifier) -> None:
+        term_founded = self.get_term_by_type(term_type)
+        self.terms = [term for term in self.terms if term.type != term_founded.type ]
 
     @auto_refresh_terms
     def update_term(self, term_type: TermIdentifier, **kwargs) -> None:

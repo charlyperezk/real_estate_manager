@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
-from ...seedwork.domain.value_objects import ValueObject
+from src.seedwork.domain.value_objects import ValueObject
 from .fee import Fee
 
 class Currency(str, Enum):

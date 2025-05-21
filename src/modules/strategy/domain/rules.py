@@ -1,5 +1,5 @@
 from typing import List
-from ..seedwork.domain.rules import BusinessRule
+from src.seedwork.domain.rules import BusinessRule
 from .terms_and_conditions import Term, TermIdentifier
 from .value_objects.date_range import DateRange
 from .strategy_status import StrategyStatus

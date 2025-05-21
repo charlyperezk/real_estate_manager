@@ -2,7 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Union, List
 from dataclasses import dataclass, field, replace
-from ...seedwork.domain.value_objects import ValueObject
+from src.seedwork.domain.value_objects import ValueObject
 
 class TermType(Enum):
     REGISTERED_WORKER = "registered_worker"

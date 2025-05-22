@@ -20,8 +20,7 @@ from .events import (
     StrategyWasDiscontinued,
     StrategyRenewAlertActivated,
     PeriodWasExtended,
-    PeriodHasExpired,
-    PeriodWasStopped,
+    StrategyHasExpired,
     TermWasAdded,
     TermWasRemoved
 )
@@ -39,7 +38,7 @@ class Strategy(AggregateRoot):
     renew_alert: bool = field(default=False)
     days_before_renew_alert: int = field(default=15)
     status: StrategyStatus = field(default=StrategyStatus.ACTIVE)
-    accepted: bool = field(default=False)
+    accepted_by_customer_id: Optional[GenericUUID] = field(default=None)
 
     def __post_init__(self):
         if not self.deposit:
@@ -104,9 +103,8 @@ class Strategy(AggregateRoot):
             )
         )
 
-    def discontinue(self) -> None:
-        assert self.status != StrategyStatus.DISCONTINUED, "Strategy is already discontinued"
-        
+    @check_status_is_not_discontinued
+    def discontinue(self) -> None:        
         self.status = StrategyStatus.DISCONTINUED
         self.period = self.period.stopped()
         self.register_event(
@@ -127,6 +125,12 @@ class Strategy(AggregateRoot):
                 type=self.type
             )
         )
+
+    @check_status_is_not_discontinued
+    def evaluate_expiration(self) -> None:
+        if self.period.finished:
+            self.status = StrategyStatus.EXPIRED
+            self.register_event(StrategyHasExpired(property_id=self.property_id, type=self.type))
 
     @check_status_is_not_discontinued
     def register_term(self, term: Term) -> None:

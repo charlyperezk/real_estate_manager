@@ -1,4 +1,4 @@
-from seedwork.application.events import DomainEvent
+from src.seedwork.application.events import DomainEvent
 from typing import Type
 
 class FakeEventPublisher:

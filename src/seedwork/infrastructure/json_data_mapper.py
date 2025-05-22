@@ -1,4 +1,4 @@
-from seedwork.domain.entities import Entity, GenericUUID
+from src.seedwork.domain.entities import Entity, GenericUUID
 
 
 class JSONDataMapper:

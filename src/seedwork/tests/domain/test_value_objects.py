@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from seedwork.domain.value_objects import GenericUUID, Money
+from src.seedwork.domain.value_objects import GenericUUID, Money
 
 
 class CustomPydanticModel(BaseModel):

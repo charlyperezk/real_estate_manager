@@ -1,5 +1,5 @@
-from seedwork.application.commands import CommandResult
-from seedwork.application.events import EventResult
+from src.seedwork.application.commands import CommandResult
+from src.seedwork.application.events import EventResult
 
 
 def as_event_result(command_result: CommandResult) -> EventResult:

@@ -2,18 +2,18 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from seedwork.domain.entities import Entity
-from seedwork.domain.events import DomainEvent
-from seedwork.domain.exceptions import EntityNotFoundException
-from seedwork.domain.repositories import GenericRepository
-from seedwork.domain.value_objects import GenericUUID
-from seedwork.infrastructure.data_mapper import DataMapper
-from seedwork.infrastructure.database import Base
+from src.seedwork.domain.entities import Entity
+from src.seedwork.domain.events import DomainEvent
+from src.seedwork.domain.exceptions import EntityNotFoundException
+from src.seedwork.domain.repositories import GenericRepository
+from src.seedwork.domain.value_objects import GenericUUID
+from src.seedwork.infrastructure.data_mapper import DataMapper
+from src.seedwork.infrastructure.database import Base
 
 
 class InMemoryRepository(GenericRepository[GenericUUID, Entity]):
     def __init__(self) -> None:
-        self.objects: dict[GenericUUID, Entity] = {}
+        self.objects: dict[GenericUUID, Entity[GenericUUID]] = {}
 
     def get_by_id(self, entity_id: GenericUUID) -> Entity:
         try:

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from seedwork.domain.entities import AggregateRoot, Entity
+from src.seedwork.domain.entities import AggregateRoot, Entity
 
 
 @dataclass

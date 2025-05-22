@@ -3,8 +3,8 @@ from uuid import UUID
 
 import pytest
 
-from seedwork.domain.entities import Entity
-from seedwork.infrastructure.data_mapper import JSONDataMapper
+from src.seedwork.domain.entities import Entity
+from src.seedwork.infrastructure.data_mapper import JSONDataMapper
 
 
 @dataclass

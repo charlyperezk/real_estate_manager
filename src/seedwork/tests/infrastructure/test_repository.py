@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 import pytest
 
-from seedwork.domain.entities import Entity
-from seedwork.domain.exceptions import EntityNotFoundException
-from seedwork.infrastructure.repository import InMemoryRepository
+from src.seedwork.domain.entities import Entity
+from src.seedwork.domain.exceptions import EntityNotFoundException
+from src.seedwork.infrastructure.repository import InMemoryRepository
 
 
 @dataclass

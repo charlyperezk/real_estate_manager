@@ -6,11 +6,11 @@ from sqlalchemy import Column, String
 from sqlalchemy.orm import Session
 from sqlalchemy_utils import UUIDType
 
-from seedwork.domain.entities import Entity
-from seedwork.domain.exceptions import EntityNotFoundException
-from seedwork.infrastructure.data_mapper import DataMapper
-from seedwork.infrastructure.database import Base
-from seedwork.infrastructure.repository import SqlAlchemyGenericRepository
+from src.seedwork.domain.entities import Entity
+from src.seedwork.domain.exceptions import EntityNotFoundException
+from src.seedwork.infrastructure.data_mapper import DataMapper
+from src.seedwork.infrastructure.database import Base
+from src.seedwork.infrastructure.repository import SqlAlchemyGenericRepository
 
 
 @dataclass

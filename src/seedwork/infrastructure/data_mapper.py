@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
-from seedwork.domain.entities import Entity, GenericUUID
+from src.seedwork.domain.entities import Entity, GenericUUID
 
 MapperEntity = TypeVar("MapperEntity", bound=Entity)
 MapperModel = TypeVar("MapperModel", bound=Any)

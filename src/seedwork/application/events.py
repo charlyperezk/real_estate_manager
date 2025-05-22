@@ -4,8 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from seedwork.domain.type_hints import DomainEvent
-from seedwork.domain.value_objects import GenericUUID
+from src.seedwork.domain.type_hints import DomainEvent
+from src.seedwork.domain.value_objects import GenericUUID
 
 
 class EventId(GenericUUID):

@@ -2,11 +2,11 @@ from dataclasses import dataclass
 
 import pytest
 
-from seedwork.application import Application
-from seedwork.application.command_handlers import CommandResult
-from seedwork.application.commands import Command
-from seedwork.application.events import EventResult, IntegrationEvent
-from seedwork.domain.events import DomainEvent
+from src.seedwork.application import Application
+from src.seedwork.application.command_handlers import CommandResult
+from src.seedwork.application.commands import Command
+from src.seedwork.application.events import EventResult, IntegrationEvent
+from src.seedwork.domain.events import DomainEvent
 
 
 @pytest.mark.skip(reason="seedwork Application deprecated by lato")

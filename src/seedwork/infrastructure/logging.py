@@ -7,7 +7,7 @@ from logging.config import dictConfig
 
 from pythonjsonlogger import jsonlogger
 
-from seedwork.utils.functional import SimpleLazyObject
+from src.seedwork.utils.functional import SimpleLazyObject
 
 correlation_id: ContextVar[uuid.UUID] = ContextVar(
     "correlation_id", default=uuid.UUID("00000000-0000-0000-0000-000000000000")
@@ -91,7 +91,7 @@ class LoggerFactory:
                     },
                 },
                 "json_formatter": {
-                    "()": "seedwork.infrastructure.logging.ElkJsonFormatter",
+                    "()": "src.seedwork.infrastructure.logging.ElkJsonFormatter",
                 },
             },
             "handlers": {

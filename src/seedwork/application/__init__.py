@@ -4,16 +4,16 @@ from collections import defaultdict
 from functools import partial
 from typing import Any, Type, TypeVar
 
-from seedwork.application.command_handlers import CommandResult
-from seedwork.application.commands import Command
-from seedwork.application.events import EventResult, EventResultSet, IntegrationEvent
-from seedwork.application.exceptions import ApplicationException
-from seedwork.application.inbox_outbox import InMemoryInbox
-from seedwork.application.queries import Query
-from seedwork.application.query_handlers import QueryResult
-from seedwork.domain.events import DomainEvent
-from seedwork.domain.repositories import GenericRepository
-from seedwork.utils.data_structures import OrderedSet
+from src.seedwork.application.command_handlers import CommandResult
+from src.seedwork.application.commands import Command
+from src.seedwork.application.events import EventResult, EventResultSet, IntegrationEvent
+from src.seedwork.application.exceptions import ApplicationException
+from src.seedwork.application.inbox_outbox import InMemoryInbox
+from src.seedwork.application.queries import Query
+from src.seedwork.application.query_handlers import QueryResult
+from src.seedwork.domain.events import DomainEvent
+from src.seedwork.domain.repositories import GenericRepository
+from src.seedwork.utils.data_structures import OrderedSet
 
 
 def get_function_arguments(func):

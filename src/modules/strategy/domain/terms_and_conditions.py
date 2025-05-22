@@ -48,6 +48,6 @@ class TermsAndConditions:
 
     def get_term_by_type(self, term_type: TermIdentifier) -> Term:
         try:
-            return next((term for term in self.terms if term == term_type))
+            return next((term for term in self.terms if term.type == term_type))
         except StopIteration:
             raise TermNotFound(f"Can't found term {term_type} in terms")

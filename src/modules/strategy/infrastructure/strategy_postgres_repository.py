@@ -27,8 +27,8 @@ https://youtu.be/sO7FFPNvX2s?t=7214
 """
 
 def instantiate_terms(raw_terms: List[Dict[str, Union[str, bool]]]) -> List[Term]:
-    def is_identifier_in_default_term_types(identifier: str) -> bool:
-        return identifier in Term.get_default_term_types()
+    def cast_type(identifier: str) -> Union[TermType, str]:
+        return identifier if not identifier in Term.get_default_term_types() else TermType(identifier)
     
     def instantiate_term(type: str, active: bool, description: str) -> Term:
         return Term(
@@ -36,14 +36,13 @@ def instantiate_terms(raw_terms: List[Dict[str, Union[str, bool]]]) -> List[Term
             active=active,
             description=description
         )
-
-    term_type_field_list = [i['type'] if not is_identifier_in_default_term_types(
-        i['type']) else TermType(i['type']) for i in raw_terms] #type: ignore
-    active_field_list = [bool(i['active']) for i in raw_terms]
-    description_field_list = [i['description'] for i in raw_terms]
-
+  
+    type_list = list(map(lambda term: cast_type(term['type']), raw_terms)) #type: ignore
+    active_list = list(map(lambda term: bool(term['active']), raw_terms))
+    description_list = list(map(lambda term: term['description'], raw_terms))
+        
     return [instantiate_term(t[0], t[1], t[2]) #type: ignore
-            for t in zip(term_type_field_list, active_field_list, description_field_list)] 
+            for t in zip(type_list, active_list, description_list)]
 
 class StrategyModel(Base):
     """Data model for listing domain object"""

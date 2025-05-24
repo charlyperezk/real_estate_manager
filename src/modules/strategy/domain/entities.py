@@ -46,6 +46,10 @@ class Strategy(AggregateRoot):
         self.check_rule(DaysBeforeRenewAlertMustBePositive(days=self.days_before_renew_alert))        
 
     @property
+    def accepted(self) -> bool:
+        return self.accepted_by_customer_id is not None
+
+    @property
     def days_left(self) -> int:
         return self.period.days_left
     
@@ -64,6 +68,12 @@ class Strategy(AggregateRoot):
     @property
     def default_strategy_status(self) -> List[str]:
         return StrategyStatus.get_default_strategy_status()
+
+    def calculate_fee(self) -> Money:
+        return self.price.calculate_fee_amount(self.fee)
+
+    def calculate_fee_discounting_fee(self) -> Money:
+        return self.price.calculate_amount_discounting_fee(self.fee)
 
     def is_in_renew_alert_period(self) -> bool:
         return self.period.on_going and self.period.days_left < self.days_before_renew_alert

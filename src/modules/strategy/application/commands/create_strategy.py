@@ -8,6 +8,7 @@ from ...domain.entities import Fee, Strategy, StrategyType, DateRange
 from ...domain.value_objects.money import Money
 from ...domain.repositories import StrategyRepository
 from ...domain.events import StrategyWasActivated
+from ...domain.service import StrategyService
 
 class CreateStrategy(Command):
     property_id: GenericUUID
@@ -21,7 +22,7 @@ class CreateStrategy(Command):
 @strategy_module.handler(CreateStrategy)
 async def create_strategy(command: CreateStrategy, strategy_repository: StrategyRepository, logger: Logger) -> Strategy:
     logger.info("Creating strategy")
-
+    
     strategy = Strategy(
         id=command.id,
         property_id=command.property_id,
@@ -32,7 +33,12 @@ async def create_strategy(command: CreateStrategy, strategy_repository: Strategy
         price=command.price,
         deposit=command.deposit if command.deposit else Money(amount=0, currency=command.price.currency)
     )
-    
+
+    strategies = strategy_repository.get_strategies_by_property_id(property_id=command.property_id)
+    if strategies:
+        service = StrategyService(property_id=command.property_id, strategies=strategies)
+        service.strategy_can_be_register(strategy=strategy)
+        
     strategy.register_event(
         StrategyWasActivated(
             id=command.id,

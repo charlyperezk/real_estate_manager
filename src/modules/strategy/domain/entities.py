@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
-from src.seedwork.domain.entities import AggregateRoot
+from src.seedwork.domain.entities import Entity, AggregateRoot
 from src.seedwork.domain.value_objects import GenericUUID
 from .value_objects.date_range import DateRange
 from .value_objects.fee import Fee
@@ -9,10 +9,12 @@ from .value_objects.money import Money
 from .strategy_status import StrategyStatus
 from .strategy_types import StrategyType
 from .terms_and_conditions import TermsAndConditions, Term, TermIdentifier
+from .partners import Partner, PartnerType, Partners
 from .decorators import check_status_is_not_discontinued
 from .rules import (
     PeriodMustBeOnGoing,
-    DaysBeforeRenewAlertMustBePositive
+    DaysBeforeRenewAlertMustBePositive,
+    AssociatePartnerCanBeAddedIfThereIsNoExclusivity
 )
 from .events import (
     StrategyWasActivated,
@@ -22,8 +24,16 @@ from .events import (
     PeriodWasExtended,
     StrategyHasExpired,
     TermWasAdded,
-    TermWasRemoved
+    TermWasRemoved,
+    PartnerWasAdded,
+    PartnerWasRemoved,
+    PartnerWasUpdated,
 )
+
+# @dataclass
+# class Confirmation(Entity):
+#     customer_id: GenericUUID
+#     timestamp: datetime
 
 @dataclass
 class Strategy(AggregateRoot):
@@ -39,6 +49,7 @@ class Strategy(AggregateRoot):
     days_before_renew_alert: int = field(default=15)
     status: StrategyStatus = field(default=StrategyStatus.ACTIVE)
     accepted_by_customer_id: Optional[GenericUUID] = field(default=None)
+    partners: Partners = field(default_factory=Partners)
 
     def __post_init__(self):
         if not self.deposit:
@@ -47,14 +58,30 @@ class Strategy(AggregateRoot):
 
     @property
     def accepted(self) -> bool:
+        """
+        Returns if the strategy was accepted by a customer
+        """
         return self.accepted_by_customer_id is not None
 
     @property
+    def shared(self) -> bool:
+        """
+        Returns if the strategy has a comercialization partnership
+        """
+        return any(self.partners.get_partners())
+
+    @property
     def days_left(self) -> int:
+        """
+        Days until the end of the period
+        """
         return self.period.days_left
     
     @property
     def terms_quantity(self) -> int:
+        """
+        Number of registered terms and conditions
+        """
         return self.terms_conditions.registered_terms
     
     @property
@@ -69,10 +96,64 @@ class Strategy(AggregateRoot):
     def default_strategy_status(self) -> List[str]:
         return StrategyStatus.get_default_strategy_status()
 
-    def calculate_fee(self) -> Money:
-        return self.price.calculate_fee_amount(self.fee)
+    def get_partners(self, type: Optional[PartnerType]=None) -> List[Partner]:
+        return self.partners.get_partners(type=type)
 
-    def calculate_fee_discounting_fee(self) -> Money:
+    def add_partner(self, partner: Partner) -> None:
+        self.check_rule(
+            AssociatePartnerCanBeAddedIfThereIsNoExclusivity(
+                exclusivity=self.exclusivity,
+                partner_type=partner.type
+            )
+        )
+        self.partners.add_partner(partner)
+        self.register_event(
+            PartnerWasAdded(
+                property_id=self.property_id,
+                partner_type=partner.type,
+                fee=partner.fee.value,
+                name=partner.name,
+                exclusivity=self.exclusivity,
+                status=self.status
+            )
+        )
+
+    def update_partner(self, partner: Partner) -> None:
+        self.partners.update_partner(partner)
+        self.register_event(
+            PartnerWasUpdated(
+                property_id=self.property_id,
+                partner_type=partner.type,
+                fee=partner.fee.value,
+                name=partner.name,
+                exclusivity=self.exclusivity,
+                status=self.status
+            )
+        )
+
+    def delete_partner(self, partner: Partner) -> None:
+        self.partners.add_partner(partner)
+        self.register_event(
+            PartnerWasRemoved(
+                property_id=self.property_id,
+                partner_type=partner.type,
+                fee=partner.fee.value,
+                name=partner.name,
+                exclusivity=self.exclusivity,
+                status=self.status
+            )
+        )
+
+    def calculate_fee(self, exclude_partners: bool=False) -> Money:
+        fee = self.fee
+        if exclude_partners:
+            assert self.shared, "Strategy doesn't have a partner associated"
+            partners_fee = self.partners.calculate_sum_of_participation().value
+            fee = Fee(value=(self.fee.value * partners_fee) / 100) # type: ignore
+        
+        return self.price.calculate_fee_amount(fee)
+
+    def calculate_amount_discounting_fee(self) -> Money:
         return self.price.calculate_amount_discounting_fee(self.fee)
 
     def is_in_renew_alert_period(self) -> bool:
@@ -150,3 +231,12 @@ class Strategy(AggregateRoot):
     def delete_term(self, term_type: TermIdentifier) -> None:
         self.terms_conditions.delete_term(term_type)
         self.register_event(TermWasRemoved(property_id=self.property_id, term_type=term_type))
+
+@dataclass
+class Owner:
+    name: str
+    email: str
+    phone: str
+    address: str
+    city: str
+    properties: List[GenericUUID] = field(default_factory=list)

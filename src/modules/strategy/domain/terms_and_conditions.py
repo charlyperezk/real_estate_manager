@@ -1,7 +1,7 @@
 from typing import List
 from dataclasses import dataclass, field
 from src.seedwork.domain.mixins import check_rule
-from .value_objects.term import Term, TermType, TermIdentifier
+from .value_objects.term import Term, TermIdentifier
 from .exceptions import TermNotFound
 from .rules import TermTypeMustNotAlreadyBeInTerms
 

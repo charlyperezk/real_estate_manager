@@ -8,12 +8,15 @@ from sqlalchemy_utils import UUIDType
 from sqlalchemy import Column, String, DateTime, Integer, Float, Boolean
 
 from ..domain.entities import Strategy, StrategyType, StrategyStatus
-from ..domain.terms_and_conditions import Term, TermType, TermsAndConditions
+from ..domain.partners import Partner, PartnerType, Partners
+from ..domain.terms_and_conditions import TermsAndConditions
 from ..domain.value_objects import (
     Money,
     Currency,
     Fee,
-    DateRange
+    DateRange,
+    Term,
+    TermType
 )
 from ..domain.repositories import StrategyRepository
 from src.seedwork.infrastructure.data_mapper import DataMapper
@@ -26,23 +29,33 @@ References:
 https://youtu.be/sO7FFPNvX2s?t=7214
 """
 
-def instantiate_terms(raw_terms: List[Dict[str, Union[str, bool]]]) -> List[Term]:
-    def cast_type(identifier: str) -> Union[TermType, str]:
-        return identifier if not identifier in Term.get_default_term_types() else TermType(identifier)
+def instantiate_partners(raw_partners: List[Dict[str, Union[str, bool]]]) -> List[Partner]:
     
-    def instantiate_term(type: str, active: bool, description: str) -> Term:
-        return Term(
-            type=type,
-            active=active,
-            description=description
-        )
-  
-    type_list = list(map(lambda term: cast_type(term['type']), raw_terms)) #type: ignore
-    active_list = list(map(lambda term: bool(term['active']), raw_terms))
-    description_list = list(map(lambda term: term['description'], raw_terms))
+    def cast_partner_from_dict(partner: Dict[str, Union[str, bool]]) -> Partner:        
+        def cast_type(identifier: str) -> Union[PartnerType, str]:
+            return identifier if not identifier in Partner.get_default_partner_types() else PartnerType(identifier)
         
-    return [instantiate_term(t[0], t[1], t[2]) #type: ignore
-            for t in zip(type_list, active_list, description_list)]
+        return Partner(
+            type=cast_type(partner['type']), #type: ignore
+            fee=Fee(value=partner['fee']['value']), #type: ignore
+            name=partner['name'] #type: ignore
+        )
+        
+    return [cast_partner_from_dict(partner) for partner in raw_partners]
+
+def instantiate_terms(raw_terms: List[Dict[str, Union[str, bool]]]) -> List[Term]:    
+    
+    def cast_term_from_dict(term: Dict[str, Union[str, bool]]) -> Term:        
+        def cast_type(identifier: str) -> Union[TermType, str]:
+            return identifier if not identifier in Term.get_default_term_types() else TermType(identifier)
+        
+        return Term(
+            type=cast_type(term['type']), #type: ignore
+            active=bool(term['type']),
+            description=term['description'] #type: ignore
+        )
+        
+    return [cast_term_from_dict(term) for term in raw_terms]
 
 class StrategyModel(Base):
     """Data model for listing domain object"""
@@ -84,6 +97,9 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
             terms_conditions=TermsAndConditions( #type: ignore
                 terms=instantiate_terms(raw_terms=d["terms_conditions"]["terms"]), #type: ignore 
                 registered_terms=int(d["terms_conditions"]["registered_terms"]) #type: ignore
+            ),
+            partners=Partners( #type: ignore
+                partners=instantiate_partners(raw_partners=d["partners"]["partners"]) #type: ignore
             )
         )
 
@@ -108,10 +124,13 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
                 "terms_conditions": {
                     "terms": entity.terms_conditions.get_terms(),
                     "registered_terms": entity.terms_conditions.registered_terms
+                },
+                "partners": {
+                    "partners": entity.get_partners()
                 }
+
             }
         )
-
 
 class StrategyPostgresJsonManagementRepository(StrategyRepository, SqlAlchemyGenericRepository):
     """Listing repository implementation"""

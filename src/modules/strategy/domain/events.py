@@ -51,3 +51,17 @@ class TermWasAdded(DomainEvent):
 class TermWasRemoved(DomainEvent):
     property_id: GenericUUID
     term_type: TermIdentifier
+
+class PartnerWasAdded(DomainEvent):
+    property_id: GenericUUID
+    partner_type: str
+    fee: float
+    name: str
+    exclusivity: bool
+    status: StrategyStatus
+
+class PartnerWasRemoved(PartnerWasAdded):
+    ...
+
+class PartnerWasUpdated(PartnerWasAdded):
+    ...

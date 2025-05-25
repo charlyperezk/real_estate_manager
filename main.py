@@ -7,8 +7,7 @@ from src.modules.strategy.application.commands.create_strategy import CreateStra
 from src.modules.strategy.application.queries import GetStrategy, CalculateStrategyFeeAmount
 from src.modules.strategy.application.commands.set_term_to_strategy import SetTermToStrategy
 from src.modules.strategy.domain.entities import Fee, Term, Strategy, StrategyStatus, StrategyType, DateRange
-from src.modules.strategy.domain.value_objects.money import Currency, Money
-from src.modules.strategy.domain.terms_and_conditions import TermType
+from src.modules.strategy.domain.value_objects import Currency, Money, TermType
 
 rent_fee = Fee(value=15)
 period = DateRange.from_now_to(weeks=2)

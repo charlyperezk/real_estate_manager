@@ -1,9 +1,19 @@
 from typing import List, Optional
 from dataclasses import dataclass
 from src.seedwork.domain.value_objects import GenericUUID
-from src.seedwork.domain.mixins import check_rule
 from src.seedwork.domain.services import DomainService
+from src.seedwork.domain.mixins import check_rule
+from src.seedwork.domain.rules import BusinessRule
 from .entities import Strategy, StrategyType, StrategyStatus
+
+class StrategyMustBeUnique(BusinessRule):
+    strategy_type: str
+    strategies: List[Strategy]
+
+    _message = "Strategy type already exists"
+
+    def is_broken(self) -> bool:
+        return any((strategy.type == self.strategy_type for strategy in self.strategies))
 
 @dataclass
 class StrategyService(DomainService):
@@ -42,10 +52,11 @@ class StrategyService(DomainService):
         return self.any_rent_strategy_exist() and self.any_sell_strategy_exist()
 
     def strategy_can_be_register(self, strategy: Strategy):        
-        if strategy.type == StrategyType.RENT:
-            assert not self.any_rent_strategy_exist(), "One rent strategy already exists"
-        elif strategy.type == StrategyType.SELL:
-            assert not self.any_sell_strategy_exist(), "One sell strategy already exists"
-        
+        check_rule(
+            StrategyMustBeUnique(
+                strategy_type=strategy.type,
+                strategies=self.strategies
+            )
+        )        
         self.strategies.append(strategy)
         self.refresh_registered_strategies_quantity()

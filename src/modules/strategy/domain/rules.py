@@ -3,7 +3,7 @@ from src.seedwork.domain.rules import BusinessRule
 from .terms_and_conditions import Term, TermIdentifier
 from .value_objects.date_range import DateRange
 from .entities import StrategyStatus
-from .value_objects.partner import Partner, PartnerType
+from .partner import Partner, PartnerType
 
 # Strategy rules:
 class PeriodMustBeOnGoing(BusinessRule):

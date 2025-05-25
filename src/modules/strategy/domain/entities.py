@@ -9,7 +9,8 @@ from .value_objects.money import Money
 from .strategy_status import StrategyStatus
 from .strategy_types import StrategyType
 from .terms_and_conditions import TermsAndConditions, Term, TermIdentifier
-from .partners import Partner, PartnerType, Partners
+from .partners import Partners
+from .partner import Partner, PartnerType, Participation
 from .decorators import check_status_is_not_discontinued
 from .rules import (
     PeriodMustBeOnGoing,
@@ -99,6 +100,13 @@ class Strategy(AggregateRoot):
     def get_partners(self, type: Optional[PartnerType]=None) -> List[Partner]:
         return self.partners.get_partners(type=type)
 
+    def partner_has_participation(self, partner_id: GenericUUID) -> bool:
+        return any([partner for partner in self.get_partners() if partner.id == partner_id])
+
+    def get_participation_by_partner_id(self, partner_id: GenericUUID) -> Participation:
+        assert self.partner_has_participation(partner_id), "Partner doesn't have any participation"
+        return next((partner.participation for partner in self.get_partners() if partner.id == partner_id))
+
     def add_partner(self, partner: Partner) -> None:
         self.check_rule(
             AssociatePartnerCanBeAddedIfThereIsNoExclusivity(
@@ -109,10 +117,10 @@ class Strategy(AggregateRoot):
         self.partners.add_partner(partner)
         self.register_event(
             PartnerWasAdded(
+                id=partner.id,
                 property_id=self.property_id,
                 partner_type=partner.type,
                 fee=partner.fee.value,
-                name=partner.name,
                 exclusivity=self.exclusivity,
                 status=self.status
             )
@@ -122,10 +130,10 @@ class Strategy(AggregateRoot):
         self.partners.update_partner(partner)
         self.register_event(
             PartnerWasUpdated(
+                id=partner.id,
                 property_id=self.property_id,
                 partner_type=partner.type,
                 fee=partner.fee.value,
-                name=partner.name,
                 exclusivity=self.exclusivity,
                 status=self.status
             )
@@ -135,10 +143,10 @@ class Strategy(AggregateRoot):
         self.partners.add_partner(partner)
         self.register_event(
             PartnerWasRemoved(
+                id=partner.id,
                 property_id=self.property_id,
                 partner_type=partner.type,
                 fee=partner.fee.value,
-                name=partner.name,
                 exclusivity=self.exclusivity,
                 status=self.status
             )

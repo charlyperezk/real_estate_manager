@@ -8,7 +8,8 @@ from sqlalchemy_utils import UUIDType
 from sqlalchemy import Column, String, DateTime, Integer, Float, Boolean
 
 from ..domain.entities import Strategy, StrategyType, StrategyStatus
-from ..domain.partners import Partner, PartnerType, Partners
+from ..domain.partners import Partners
+from ..domain.partner import PartnerType, Partner, Participation
 from ..domain.terms_and_conditions import TermsAndConditions
 from ..domain.value_objects import (
     Money,
@@ -36,9 +37,11 @@ def instantiate_partners(raw_partners: List[Dict[str, Union[str, bool]]]) -> Lis
             return identifier if not identifier in Partner.get_default_partner_types() else PartnerType(identifier)
         
         return Partner(
-            type=cast_type(partner['type']), #type: ignore
-            fee=Fee(value=partner['fee']['value']), #type: ignore
-            name=partner['name'] #type: ignore
+            id=partner['id'], #type: ignore
+            participation=Participation(
+                type=cast_type(partner['type']), #type: ignore
+                fee=Fee(value=partner['fee']['value']), #type: ignore
+            )
         )
         
     return [cast_partner_from_dict(partner) for partner in raw_partners]

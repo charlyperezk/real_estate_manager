@@ -36,7 +36,7 @@ async def create_strategy(command: CreateStrategy, strategy_repository: Strategy
 
     strategies = strategy_repository.get_strategies_by_property_id(property_id=command.property_id)
     if strategies:
-        service = StrategyService(property_id=command.property_id, strategies=strategies)
+        service = StrategyService(strategies=strategies)
         service.strategy_can_be_register(strategy=strategy)
         
     strategy.register_event(

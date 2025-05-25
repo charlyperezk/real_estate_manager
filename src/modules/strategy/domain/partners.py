@@ -3,7 +3,7 @@ from typing import List, Optional
 from src.seedwork.domain.mixins import check_rule
 from .value_objects import Fee
 from .rules import PartnerMustBeUnique, PartnerCanBeAddedIfFeeIsLessThan75
-from .value_objects.partner import Partner, PartnerType
+from .partner import Partner, PartnerType
 
 @dataclass
 class Partners:

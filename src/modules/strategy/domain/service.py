@@ -5,7 +5,9 @@ from src.seedwork.domain.services import DomainService
 from src.seedwork.domain.mixins import check_rule
 from src.seedwork.domain.rules import BusinessRule
 from .entities import Strategy, StrategyType, StrategyStatus
+from .partner import Partner, Participation
 
+@dataclass
 class StrategyMustBeUnique(BusinessRule):
     strategy_type: str
     strategies: List[Strategy]
@@ -17,7 +19,6 @@ class StrategyMustBeUnique(BusinessRule):
 
 @dataclass
 class StrategyService(DomainService):
-    property_id: GenericUUID
     strategies: List[Strategy]
     registered_strategies: int = 0
 
@@ -29,11 +30,11 @@ class StrategyService(DomainService):
         ):
         result = self.strategies
         if accepted:
-            result = list(filter(lambda strategy: strategy.accepted == status, result))
+            result = [strategy for strategy in result if strategy.accepted]
         if status:  
-            result = list(filter(lambda strategy: strategy.status == status, result))
+            result = [strategy for strategy in result if strategy.status == status]
         if type:
-            result = list(filter(lambda strategy: strategy.status == status, result))
+            result = [strategy for strategy in result if strategy.type == type]
         return result    
     
     def refresh_registered_strategies_quantity(self) -> None:
@@ -51,7 +52,7 @@ class StrategyService(DomainService):
     def has_both_strategies_registered(self) -> bool:
         return self.any_rent_strategy_exist() and self.any_sell_strategy_exist()
 
-    def strategy_can_be_register(self, strategy: Strategy):        
+    def strategy_can_be_register(self, strategy: Strategy):
         check_rule(
             StrategyMustBeUnique(
                 strategy_type=strategy.type,
@@ -60,3 +61,13 @@ class StrategyService(DomainService):
         )        
         self.strategies.append(strategy)
         self.refresh_registered_strategies_quantity()
+
+    def get_strategies_by_partner_id(self, partner_id: GenericUUID) -> List[Strategy]:
+        return [strategy for strategy in self.strategies if strategy.partner_has_participation(partner_id)]        
+
+    def get_participations_by_partner_id(self, partner_id: GenericUUID) -> List[Participation]:
+        strategies_with_participations = self.get_strategies_by_partner_id(partner_id)
+        
+        if any(strategies_with_participations):
+            return [strategy.get_participation_by_partner_id(partner_id) for strategy in self.strategies]
+        return []

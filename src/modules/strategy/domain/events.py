@@ -56,7 +56,6 @@ class PartnerWasAdded(DomainEvent):
     property_id: GenericUUID
     partner_type: str
     fee: float
-    name: str
     exclusivity: bool
     status: StrategyStatus
 

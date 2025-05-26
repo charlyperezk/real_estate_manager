@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
-from src.seedwork.domain.value_objects import ValueObject
+from .value_objects import ValueObject
 
 @dataclass(frozen=True)
 class DateRange(ValueObject):

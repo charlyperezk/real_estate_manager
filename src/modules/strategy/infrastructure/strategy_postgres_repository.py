@@ -9,20 +9,21 @@ from sqlalchemy import Column, String, DateTime, Integer, Float, Boolean
 
 from ..domain.entities import Strategy, StrategyType, StrategyStatus
 from ..domain.partners import Partners
-from ..domain.partner import PartnerType, Partner, Participation
+from ..domain.partner import AchievementType, Partner
 from ..domain.terms_and_conditions import TermsAndConditions
-from ..domain.value_objects import (
-    Money,
-    Currency,
-    Fee,
-    DateRange,
-    Term,
-    TermType
-)
+
+from ..domain.value_objects import Term, TermType
 from ..domain.repositories import StrategyRepository
+
 from src.seedwork.infrastructure.data_mapper import DataMapper
 from src.seedwork.infrastructure.database import Base
 from src.seedwork.infrastructure.repository import SqlAlchemyGenericRepository
+from src.seedwork.domain.value_objects import (
+    Money,
+    Currency,
+    Fee,
+    DateRange
+)
 
 """
 References:
@@ -33,15 +34,12 @@ https://youtu.be/sO7FFPNvX2s?t=7214
 def instantiate_partners(raw_partners: List[Dict[str, Union[str, bool]]]) -> List[Partner]:
     
     def cast_partner_from_dict(partner: Dict[str, Union[str, bool]]) -> Partner:        
-        def cast_type(identifier: str) -> Union[PartnerType, str]:
-            return identifier if not identifier in Partner.get_default_partner_types() else PartnerType(identifier)
+        def cast_type(identifier: str) -> Union[AchievementType, str]:
+            return identifier if not identifier in Partner.get_default_partner_types() else AchievementType(identifier)
         
         return Partner(
             id=partner['id'], #type: ignore
-            participation=Participation(
-                type=cast_type(partner['type']), #type: ignore
-                fee=Fee(value=partner['fee']['value']), #type: ignore
-            )
+            achievement_type=cast_type(partner['achievement_type']) #type: ignore
         )
         
     return [cast_partner_from_dict(partner) for partner in raw_partners]
@@ -135,8 +133,8 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
             }
         )
 
-class StrategyPostgresJsonManagementRepository(StrategyRepository, SqlAlchemyGenericRepository):
+class StrategyPostgresJsonManagementRepository(StrategyRepository, SqlAlchemyGenericRepository): #type: ignore
     """Listing repository implementation"""
 
-    mapper_class = StrategyDataMapper
+    mapper_class = StrategyDataMapper #type: ignore
     model_class = StrategyModel

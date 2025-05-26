@@ -1,9 +1,9 @@
 from typing import List
+from src.seedwork.domain.value_objects import DateRange
 from src.seedwork.domain.rules import BusinessRule
 from .terms_and_conditions import Term, TermIdentifier
-from .value_objects.date_range import DateRange
 from .entities import StrategyStatus
-from .partner import Partner, PartnerType
+from .partner import Partner, AchievementType
 
 # Strategy rules:
 class PeriodMustBeOnGoing(BusinessRule):
@@ -32,40 +32,31 @@ class PeriodMustBePlannedToSetPlannedStatus(BusinessRule):
     def is_broken(self) -> bool:
         return self.period.already_started and self.status == StrategyStatus.PLANNED
 
-class DaysBeforeRenewAlertMustBePositive(BusinessRule):
+class DaysBeforeRenewAlertMustGreatherThanZero(BusinessRule):
     days: int
 
     _message = "Days before renew alert must be positive"
 
     def is_broken(self) -> bool:
         return self.days < 0
-    
-class PartnerCanBeAddedIfFeeIsLessThan75(BusinessRule):
-    fee: float
-    partners_fee_sum: float
-
-    _message = "Sum of partner fees can't be greather than 75%"
-
-    def is_broken(self) -> bool:
-        return (self.fee + self.partners_fee_sum) > 75
-    
-class PartnerMustBeUnique(BusinessRule):
-    partner_type: str
+        
+class AchievementMustBeUnique(BusinessRule):
+    achievement_type: str
     partners: List[Partner]
 
     _message = "Partner type already exists"
 
     def is_broken(self) -> bool:
-        return any((partner.type == self.partner_type for partner in self.partners))
+        return any((partner.type == self.achievement_type for partner in self.partners))
 
-class AssociatePartnerCanBeAddedIfThereIsNoExclusivity(BusinessRule):
+class CaptureAchievementCanBeAddedIfThereIsNoExclusivity(BusinessRule):
     exclusivity: bool
-    partner_type: str
+    achievement_type: str
 
     _message = "Can't add associate partner if there is exclusivity"
 
     def is_broken(self) -> bool:
-        return self.exclusivity and self.partner_type == PartnerType.ASSOCIATE
+        return self.exclusivity and self.achievement_type == AchievementType.CAPTURE
 
 # TermsAndConditions rules:
 class TermTypeMustNotAlreadyBeInTerms(BusinessRule):

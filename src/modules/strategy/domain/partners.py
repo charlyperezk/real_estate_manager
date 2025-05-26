@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 from src.seedwork.domain.mixins import check_rule
-from .value_objects import Fee
-from .rules import PartnerMustBeUnique, PartnerCanBeAddedIfFeeIsLessThan75
-from .partner import Partner, PartnerType
+from .rules import AchievementMustBeUnique
+from .partner import Partner, AchievementType
 
 @dataclass
 class Partners:
@@ -11,42 +10,23 @@ class Partners:
 
     @staticmethod
     def get_default_term_types() -> List[str]:
-        return [value.value for value in list(PartnerType)]
+        return [value.value for value in list(AchievementType)]
 
-    def get_partners(self, type: Optional[PartnerType]=None):
+    def get_partners(self, achievement_type: Optional[AchievementType]=None):
         partners = self.partners
         if type:
-            partners = list(filter(lambda partner: partner.type == type, partners))
+            partners = [partner for partner in partners if partner.type == achievement_type]
         return partners
 
-    def calculate_sum_of_participation(self) -> Fee:
-        partners_fee_sum = sum((partner.fee.value for partner in self.partners))
-        if partners_fee_sum:
-            return Fee(value=partners_fee_sum)
-        else:
-            return Fee(value=0)
-
     def add_partner(self, partner: Partner):
-        check_rule(PartnerMustBeUnique(partner_type=partner.type, partners=self.partners))        
-        check_rule(
-            PartnerCanBeAddedIfFeeIsLessThan75(
-                fee=partner.fee.value,
-                partners_fee_sum=self.calculate_sum_of_participation().value
-            )
-        )
+        check_rule(AchievementMustBeUnique(achievement_type=partner.type, partners=self.partners))        
         self.add_partner(partner)
 
-    def delete_partner(self, partner_type: PartnerType):
-        partner = self.get_partners(type=partner_type)
+    def delete_partner(self, achievement_type: AchievementType):
+        partner = self.get_partners(achievement_type=achievement_type)
         assert partner, "Partner not found"
-        self.partners = list(filter(lambda partner: partner.type != partner_type, self.partners))
+        self.partners = [partner for partner in self.partners if partner.type == achievement_type]
 
     def update_partner(self, partner: Partner):
         self.delete_partner(partner.type)
-        check_rule(
-            PartnerCanBeAddedIfFeeIsLessThan75(
-                fee=partner.fee.value,
-                partners_fee_sum=self.calculate_sum_of_participation().value
-            )
-        )
         self.add_partner(partner)

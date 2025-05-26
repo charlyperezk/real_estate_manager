@@ -3,6 +3,7 @@ from typing import List
 from enum import Enum
 
 class StrategyStatus(str, Enum):
+    COMPLETED = "completed"
     ACTIVE = "active"
     EXPIRED = "expired"
     DISCONTINUED = "discontinued"

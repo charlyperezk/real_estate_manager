@@ -1,21 +1,18 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
-from src.seedwork.domain.entities import Entity, AggregateRoot
-from src.seedwork.domain.value_objects import GenericUUID
-from .value_objects.date_range import DateRange
-from .value_objects.fee import Fee
-from .value_objects.money import Money
+from src.seedwork.domain.entities import AggregateRoot
+from src.seedwork.domain.value_objects import GenericUUID, DateRange, Fee, Money, RenewAlert
 from .strategy_status import StrategyStatus
 from .strategy_types import StrategyType
 from .terms_and_conditions import TermsAndConditions, Term, TermIdentifier
 from .partners import Partners
-from .partner import Partner, PartnerType, Participation
+from .partner import Partner, AchievementType
 from .decorators import check_status_is_not_discontinued
 from .rules import (
     PeriodMustBeOnGoing,
-    DaysBeforeRenewAlertMustBePositive,
-    AssociatePartnerCanBeAddedIfThereIsNoExclusivity
+    DaysBeforeRenewAlertMustGreatherThanZero,
+    CaptureAchievementCanBeAddedIfThereIsNoExclusivity
 )
 from .events import (
     StrategyWasActivated,
@@ -29,12 +26,8 @@ from .events import (
     PartnerWasAdded,
     PartnerWasRemoved,
     PartnerWasUpdated,
+    StrategyWasCompleted
 )
-
-# @dataclass
-# class Confirmation(Entity):
-#     customer_id: GenericUUID
-#     timestamp: datetime
 
 @dataclass
 class Strategy(AggregateRoot):
@@ -46,43 +39,30 @@ class Strategy(AggregateRoot):
     deposit: Optional[Money] = field(default=None)
     terms_conditions: TermsAndConditions = field(default_factory=TermsAndConditions)
     period: DateRange = field(default=DateRange.from_now_to(weeks=12))
-    renew_alert: bool = field(default=False)
-    days_before_renew_alert: int = field(default=15)
-    status: StrategyStatus = field(default=StrategyStatus.ACTIVE)
+    renew_alert: RenewAlert = field(default=RenewAlert(notice_days_threshold=15))
+    status: StrategyStatus = field(default=StrategyStatus.PLANNED)
     accepted_by_customer_id: Optional[GenericUUID] = field(default=None)
     partners: Partners = field(default_factory=Partners)
 
     def __post_init__(self):
         if not self.deposit:
             self.deposit = Money(amount=0, currency=self.price.currency)
-        self.check_rule(DaysBeforeRenewAlertMustBePositive(days=self.days_before_renew_alert))        
+        self.check_rule(DaysBeforeRenewAlertMustGreatherThanZero(days=self.renew_alert.notice_days_threshold))        
 
     @property
-    def accepted(self) -> bool:
-        """
-        Returns if the strategy was accepted by a customer
-        """
-        return self.accepted_by_customer_id is not None
+    def completed(self) -> bool:
+        return self.accepted_by_customer_id is not None and self.status == StrategyStatus.COMPLETED
 
     @property
     def shared(self) -> bool:
-        """
-        Returns if the strategy has a comercialization partnership
-        """
         return any(self.partners.get_partners())
 
     @property
     def days_left(self) -> int:
-        """
-        Days until the end of the period
-        """
         return self.period.days_left
     
     @property
     def terms_quantity(self) -> int:
-        """
-        Number of registered terms and conditions
-        """
         return self.terms_conditions.registered_terms
     
     @property
@@ -97,21 +77,14 @@ class Strategy(AggregateRoot):
     def default_strategy_status(self) -> List[str]:
         return StrategyStatus.get_default_strategy_status()
 
-    def get_partners(self, type: Optional[PartnerType]=None) -> List[Partner]:
-        return self.partners.get_partners(type=type)
-
-    def partner_has_participation(self, partner_id: GenericUUID) -> bool:
-        return any([partner for partner in self.get_partners() if partner.id == partner_id])
-
-    def get_participation_by_partner_id(self, partner_id: GenericUUID) -> Participation:
-        assert self.partner_has_participation(partner_id), "Partner doesn't have any participation"
-        return next((partner.participation for partner in self.get_partners() if partner.id == partner_id))
+    def get_partners(self, achievement_type: Optional[AchievementType]=None) -> List[Partner]:
+        return self.partners.get_partners(achievement_type=achievement_type)
 
     def add_partner(self, partner: Partner) -> None:
         self.check_rule(
-            AssociatePartnerCanBeAddedIfThereIsNoExclusivity(
+            CaptureAchievementCanBeAddedIfThereIsNoExclusivity(
                 exclusivity=self.exclusivity,
-                partner_type=partner.type
+                achievement_type=partner.type
             )
         )
         self.partners.add_partner(partner)
@@ -119,9 +92,8 @@ class Strategy(AggregateRoot):
             PartnerWasAdded(
                 id=partner.id,
                 property_id=self.property_id,
-                partner_type=partner.type,
-                fee=partner.fee.value,
-                exclusivity=self.exclusivity,
+                strategy_type=self.type,
+                achievement_type=partner.type,
                 status=self.status
             )
         )
@@ -132,9 +104,8 @@ class Strategy(AggregateRoot):
             PartnerWasUpdated(
                 id=partner.id,
                 property_id=self.property_id,
-                partner_type=partner.type,
-                fee=partner.fee.value,
-                exclusivity=self.exclusivity,
+                strategy_type=self.type,
+                achievement_type=partner.type,
                 status=self.status
             )
         )
@@ -145,39 +116,36 @@ class Strategy(AggregateRoot):
             PartnerWasRemoved(
                 id=partner.id,
                 property_id=self.property_id,
-                partner_type=partner.type,
-                fee=partner.fee.value,
-                exclusivity=self.exclusivity,
+                strategy_type=self.type,
+                achievement_type=partner.type,
                 status=self.status
             )
         )
 
-    def calculate_fee(self, exclude_partners: bool=False) -> Money:
-        fee = self.fee
-        if exclude_partners:
-            assert self.shared, "Strategy doesn't have a partner associated"
-            partners_fee = self.partners.calculate_sum_of_participation().value
-            fee = Fee(value=(self.fee.value * partners_fee) / 100) # type: ignore
-        
-        return self.price.calculate_fee_amount(fee)
-
-    def calculate_amount_discounting_fee(self) -> Money:
-        return self.price.calculate_amount_discounting_fee(self.fee)
-
-    def is_in_renew_alert_period(self) -> bool:
-        return self.period.on_going and self.period.days_left < self.days_before_renew_alert
+    def within_renew_alert_threshold(self) -> bool:
+        return self.period.on_going and self.renew_alert.within_threshold(self.period.days_left)
 
     @check_status_is_not_discontinued
     def activate_renew_alert(self) -> None:
-        assert self.is_in_renew_alert_period(), "Strategy isn't in alert renew period"
-        assert not self.renew_alert, "Renew alert is already activated"
+        assert self.within_renew_alert_threshold(), "Strategy isn't in alert renew period"
+        assert not self.renew_alert.active, "Renew alert is already activated"
 
-        self.renew_alert = True
+        self.renew_alert = RenewAlert(
+            active=True,
+            notice_days_threshold=self.renew_alert.notice_days_threshold
+        )
         self.register_event(StrategyRenewAlertActivated(property_id=self.property_id))
     
     @check_status_is_not_discontinued
     def extend_period(self, **period) -> None:        
         self.period = self.period.extended(**period)
+        
+        if self.renew_alert.active:
+            self.renew_alert = RenewAlert(
+                active=False,
+                notice_days_threshold=self.renew_alert.notice_days_threshold
+            )
+
         self.register_event(
             PeriodWasExtended(
                 period=self.period,
@@ -222,6 +190,21 @@ class Strategy(AggregateRoot):
             StrategyWasPaused(
                 property_id=self.property_id,
                 type=self.type
+            )
+        )
+
+    def mark_as_completed(self) -> None:
+        self.status = StrategyStatus.COMPLETED
+        self.accepted_by_customer_id = GenericUUID.next_id()
+        self.register_event(
+            StrategyWasCompleted(
+                property_id=self.property_id,
+                price=self.price,
+                period=self.period,
+                deposit=self.deposit, #type: ignore
+                terms_conditions=self.terms_conditions,
+                type=self.type,
+                partners=self.partners
             )
         )
 

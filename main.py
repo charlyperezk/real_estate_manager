@@ -6,12 +6,12 @@ from src.modules.strategy.application import strategy_module
 from src.modules.strategy.application.commands.create_strategy import CreateStrategy
 from src.modules.strategy.application.queries import GetStrategy
 from src.modules.strategy.application.commands.set_term_to_strategy import SetTermToStrategy
-from src.modules.strategy.domain.entities import Fee, StrategyType, DateRange
+from src.modules.strategy.domain.entities import Fee, OperationType, DateRange
 
 rent_fee = Fee(value=15)
 period = DateRange.from_now_to(weeks=2)
 amount = Money(amount=450, currency=Currency.USD)
-type = StrategyType.RENT
+type = OperationType.RENT
 
 app = create_application(create_db_engine(ApiConfig()))
 app.include_submodule(strategy_module)

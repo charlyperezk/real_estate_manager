@@ -4,7 +4,7 @@ from src.seedwork.application.commands import Command
 from src.seedwork.domain.value_objects import GenericUUID
 from src.seedwork.infrastructure.logging import Logger
 from .. import strategy_module
-from ...domain.entities import Fee, Strategy, StrategyType, DateRange
+from ...domain.entities import Fee, Strategy, OperationType, DateRange
 from ...domain.value_objects.money import Money
 from ...domain.repositories import StrategyRepository
 from ...domain.events import StrategyWasActivated
@@ -15,7 +15,7 @@ class CreateStrategy(Command):
     exclusivity: bool
     fee: Fee
     period: DateRange
-    type: StrategyType
+    type: OperationType
     price: Money
     deposit: Optional[Money]
 

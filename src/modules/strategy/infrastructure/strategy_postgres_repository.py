@@ -7,7 +7,7 @@ from sqlalchemy_json import mutable_json_type
 from sqlalchemy_utils import UUIDType
 from sqlalchemy import Column, String, DateTime, Integer, Float, Boolean
 
-from ..domain.entities import Strategy, StrategyType, StrategyStatus
+from ..domain.entities import Strategy, OperationType, StrategyStatus
 from ..domain.partners import Partners
 from ..domain.partner import AchievementType, Partner
 from ..domain.terms_and_conditions import TermsAndConditions
@@ -84,7 +84,7 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
         d = instance.data
         return Strategy(
             id=instance.id,
-            type=StrategyType(instance.type), #type: ignore
+            type=OperationType(instance.type), #type: ignore
             price=Money(amount=instance.price, currency=Currency(instance.currency)), #type: ignore
             fee=Fee(value=instance.fee), #type: ignore
             exclusivity=instance.exclusivity, #type: ignore

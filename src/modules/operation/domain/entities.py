@@ -2,10 +2,10 @@ from datetime import datetime
 from typing import Optional, Union
 from dataclasses import dataclass, field
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
-from .operation_type import OperationType
-from .achievement_types import AchievementType
-from .status import OperationStatus
 from src.seedwork.domain.value_objects import Money, Fee
+from ...shared_kernel.operation_types import OperationType
+from ...shared_kernel.achievement_types import AchievementType
+from ...shared_kernel.status import OperationStatus
 
 OWN = "own"
 
@@ -16,7 +16,8 @@ class Operation(AggregateRoot):
     operation: OperationType
     fee: Fee
     amount: Money
-    achievement: AchievementType
+    achievement_type: AchievementType
+    description: str
     status: OperationStatus = field(default=OperationStatus.ACTIVE)
     partner_id: Union[str, GenericUUID] = field(default=OWN)
     created_at: datetime = field(default_factory=datetime.now)
@@ -45,6 +46,4 @@ class Operation(AggregateRoot):
 
     def set_achievement(self, achievement_type: AchievementType) -> None:
         self.updated_at = datetime.now()
-        self.achievement = achievement_type
-
-    # def set_bonification_applyed(self, bonification: Bonification)
+        self.achievement_type = achievement_type

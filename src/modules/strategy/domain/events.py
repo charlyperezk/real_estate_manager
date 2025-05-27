@@ -1,7 +1,7 @@
 from src.seedwork.domain.value_objects import GenericUUID, Money, DateRange
 from src.seedwork.domain.events import DomainEvent
 from .terms_and_conditions import TermsAndConditions, Term, TermIdentifier
-from .strategy_types import StrategyType
+from ...shared_kernel.operation_types import OperationType
 from .strategy_status import StrategyStatus
 from .partners import AchievementType, Partners
 
@@ -16,12 +16,12 @@ class StrategyWasActivated(DomainEvent):
     price: Money
     deposit: Money
     terms_conditions: TermsAndConditions
-    type: StrategyType
+    type: OperationType
     period: DateRange
 
 class StrategyWasDiscontinued(DomainEvent):
     property_id: GenericUUID
-    type: StrategyType
+    type: OperationType
 
 class StrategyWasPaused(StrategyWasDiscontinued):
     ...
@@ -56,7 +56,7 @@ class TermWasRemoved(DomainEvent):
 
 class PartnerWasAdded(DomainEvent):
     property_id: GenericUUID
-    strategy_type: StrategyType
+    strategy_type: OperationType
     achievement_type: AchievementType
     status: StrategyStatus
 

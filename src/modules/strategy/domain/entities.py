@@ -4,15 +4,12 @@ from typing import List, Optional
 from src.seedwork.domain.entities import AggregateRoot
 from src.seedwork.domain.value_objects import GenericUUID, DateRange, Fee, Money, RenewAlert
 from .strategy_status import StrategyStatus
-from .strategy_types import StrategyType
+from ...shared_kernel.operation_types import OperationType
 from .terms_and_conditions import TermsAndConditions, Term, TermIdentifier
-from .partners import Partners
-from .partner import Partner, AchievementType
 from .decorators import check_status_is_not_discontinued
 from .rules import (
     PeriodMustBeOnGoing,
     DaysBeforeRenewAlertMustGreatherThanZero,
-    CaptureAchievementCanBeAddedIfThereIsNoExclusivity
 )
 from .events import (
     StrategyWasActivated,
@@ -23,15 +20,12 @@ from .events import (
     StrategyHasExpired,
     TermWasAdded,
     TermWasRemoved,
-    PartnerWasAdded,
-    PartnerWasRemoved,
-    PartnerWasUpdated,
     StrategyWasCompleted
 )
 
 @dataclass
 class Strategy(AggregateRoot):
-    type: StrategyType
+    type: OperationType
     price: Money
     fee: Fee
     exclusivity: bool
@@ -42,7 +36,6 @@ class Strategy(AggregateRoot):
     renew_alert: RenewAlert = field(default=RenewAlert(notice_days_threshold=15))
     status: StrategyStatus = field(default=StrategyStatus.PLANNED)
     accepted_by_customer_id: Optional[GenericUUID] = field(default=None)
-    partners: Partners = field(default_factory=Partners)
 
     def __post_init__(self):
         if not self.deposit:
@@ -52,10 +45,6 @@ class Strategy(AggregateRoot):
     @property
     def completed(self) -> bool:
         return self.accepted_by_customer_id is not None and self.status == StrategyStatus.COMPLETED
-
-    @property
-    def shared(self) -> bool:
-        return any(self.partners.get_partners())
 
     @property
     def days_left(self) -> int:
@@ -71,56 +60,11 @@ class Strategy(AggregateRoot):
     
     @property
     def available_strategy_types(self) -> List[str]:
-        return StrategyType.get_default_strategy_types()
+        return OperationType.get_default_types()
     
     @property
     def default_strategy_status(self) -> List[str]:
         return StrategyStatus.get_default_strategy_status()
-
-    def get_partners(self, achievement_type: Optional[AchievementType]=None) -> List[Partner]:
-        return self.partners.get_partners(achievement_type=achievement_type)
-
-    def add_partner(self, partner: Partner) -> None:
-        self.check_rule(
-            CaptureAchievementCanBeAddedIfThereIsNoExclusivity(
-                exclusivity=self.exclusivity,
-                achievement_type=partner.type
-            )
-        )
-        self.partners.add_partner(partner)
-        self.register_event(
-            PartnerWasAdded(
-                id=partner.id,
-                property_id=self.property_id,
-                strategy_type=self.type,
-                achievement_type=partner.type,
-                status=self.status
-            )
-        )
-
-    def update_partner(self, partner: Partner) -> None:
-        self.partners.update_partner(partner)
-        self.register_event(
-            PartnerWasUpdated(
-                id=partner.id,
-                property_id=self.property_id,
-                strategy_type=self.type,
-                achievement_type=partner.type,
-                status=self.status
-            )
-        )
-
-    def delete_partner(self, partner: Partner) -> None:
-        self.partners.add_partner(partner)
-        self.register_event(
-            PartnerWasRemoved(
-                id=partner.id,
-                property_id=self.property_id,
-                strategy_type=self.type,
-                achievement_type=partner.type,
-                status=self.status
-            )
-        )
 
     def within_renew_alert_threshold(self) -> bool:
         return self.period.on_going and self.renew_alert.within_threshold(self.period.days_left)
@@ -203,8 +147,7 @@ class Strategy(AggregateRoot):
                 period=self.period,
                 deposit=self.deposit, #type: ignore
                 terms_conditions=self.terms_conditions,
-                type=self.type,
-                partners=self.partners
+                type=self.type
             )
         )
 

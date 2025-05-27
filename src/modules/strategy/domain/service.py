@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from src.seedwork.domain.services import DomainService
 from src.seedwork.domain.mixins import check_rule
 from src.seedwork.domain.rules import BusinessRule
-from .entities import Strategy, StrategyType, StrategyStatus
+from .entities import Strategy, OperationType, StrategyStatus
 
 @dataclass
 class StrategyMustBeUnique(BusinessRule):
@@ -24,7 +24,7 @@ class StrategyService(DomainService):
             self,
             completed: bool=False,
             status: Optional[StrategyStatus]=None,
-            type: Optional[StrategyType]=None
+            type: Optional[OperationType]=None
         ):
         result = self.strategies
         if completed:
@@ -39,10 +39,10 @@ class StrategyService(DomainService):
         self.registered_strategies = len(self.get_strategies())
 
     def any_rent_strategy_exist(self) -> bool:
-        return any(self.get_strategies(type=StrategyType.RENT))
+        return any(self.get_strategies(type=OperationType.RENT))
 
     def any_sell_strategy_exist(self) -> bool:
-        return any(self.get_strategies(type=StrategyType.SELL))
+        return any(self.get_strategies(type=OperationType.SELL))
 
     def any_strategy_completed(self) -> bool:
         return any(self.get_strategies(completed=True))

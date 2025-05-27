@@ -78,7 +78,7 @@ class Strategy(AggregateRoot):
             active=True,
             notice_days_threshold=self.renew_alert.notice_days_threshold
         )
-        self.register_event(StrategyRenewAlertActivated(property_id=self.property_id))
+        self.register_event(StrategyRenewAlertActivated(strategy_id=self.id))
     
     @check_status_is_not_discontinued
     def extend_period(self, **period) -> None:        
@@ -92,8 +92,8 @@ class Strategy(AggregateRoot):
 
         self.register_event(
             PeriodWasExtended(
+                strategy_id=self.id,
                 period=self.period,
-                property_id=self.property_id,
                 status=self.status
             )
         )
@@ -106,6 +106,7 @@ class Strategy(AggregateRoot):
         self.register_event(
             StrategyWasActivated(
                 property_id=self.property_id,
+                strategy_id=self.id,
                 price=self.price,
                 period=self.period,
                 deposit=self.deposit, #type: ignore
@@ -120,7 +121,7 @@ class Strategy(AggregateRoot):
         self.period = self.period.stopped()
         self.register_event(
             StrategyWasDiscontinued(
-                property_id=self.property_id,
+                strategy_id=self.id,
                 type=self.type
             )
         )
@@ -132,7 +133,7 @@ class Strategy(AggregateRoot):
         self.status = StrategyStatus.PAUSED
         self.register_event(
             StrategyWasPaused(
-                property_id=self.property_id,
+                strategy_id=self.id,
                 type=self.type
             )
         )
@@ -142,6 +143,7 @@ class Strategy(AggregateRoot):
         self.accepted_by_customer_id = GenericUUID.next_id()
         self.register_event(
             StrategyWasCompleted(
+                strategy_id=self.id,
                 property_id=self.property_id,
                 price=self.price,
                 period=self.period,
@@ -155,16 +157,16 @@ class Strategy(AggregateRoot):
     def evaluate_expiration(self) -> None:
         if self.period.finished:
             self.status = StrategyStatus.EXPIRED
-            self.register_event(StrategyHasExpired(property_id=self.property_id, type=self.type))
+            self.register_event(StrategyHasExpired(strategy_id=self.id, type=self.type))
 
     @check_status_is_not_discontinued
     def register_term(self, term: Term) -> None:
         self.terms_conditions.register_term(term)
-        self.register_event(TermWasAdded(property_id=self.property_id, term=term))
+        self.register_event(TermWasAdded(strategy_id=self.id, term=term))
 
     def delete_term(self, term_type: TermIdentifier) -> None:
         self.terms_conditions.delete_term(term_type)
-        self.register_event(TermWasRemoved(property_id=self.property_id, term_type=term_type))
+        self.register_event(TermWasRemoved(strategy_id=self.id, term_type=term_type))
 
 @dataclass
 class Owner:

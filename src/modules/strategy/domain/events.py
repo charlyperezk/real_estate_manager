@@ -1,9 +1,8 @@
-from src.seedwork.domain.value_objects import GenericUUID, Money, DateRange
+from src.seedwork.domain.value_objects import GenericUUID, Money, DateRange, Fee
 from src.seedwork.domain.events import DomainEvent
 from .terms_and_conditions import TermsAndConditions, Term, TermIdentifier
 from ...shared_kernel.operation_types import OperationType
 from .strategy_status import StrategyStatus
-from .partners import AchievementType, Partners
 
 """
 I'm following the pgorecki approach with events management. But you can see this article to find more approaches:
@@ -12,15 +11,17 @@ https://medium.com/@dkraczkowski/events-in-domain-driven-design-event-propagatio
 
 # Strategy events
 class StrategyWasActivated(DomainEvent):
+    strategy_id: GenericUUID
     property_id: GenericUUID
     price: Money
+    fee: Fee
     deposit: Money
     terms_conditions: TermsAndConditions
     type: OperationType
     period: DateRange
 
 class StrategyWasDiscontinued(DomainEvent):
-    property_id: GenericUUID
+    strategy_id: GenericUUID
     type: OperationType
 
 class StrategyWasPaused(StrategyWasDiscontinued):
@@ -30,38 +31,26 @@ class StrategyHasExpired(StrategyWasDiscontinued):
     ...
 
 class StrategyWasCompleted(StrategyWasActivated):
-    partners: Partners
+    ...
 
 class PeriodWasExtended(DomainEvent):
-    property_id: GenericUUID
+    strategy_id: GenericUUID
     period: DateRange
     status: StrategyStatus
 
 class StrategyRenewAlertActivated(DomainEvent):
-    property_id: GenericUUID
+    strategy_id: GenericUUID
 
 class PeriodHasExpired(StrategyRenewAlertActivated):
-    property_id: GenericUUID
+    ...
 
 class PeriodWasStopped(PeriodHasExpired):
-    property_id: GenericUUID
+    ...
 
 class TermWasAdded(DomainEvent):
-    property_id: GenericUUID
+    strategy_id: GenericUUID
     term: Term
 
 class TermWasRemoved(DomainEvent):
-    property_id: GenericUUID
+    strategy_id: GenericUUID
     term_type: TermIdentifier
-
-class PartnerWasAdded(DomainEvent):
-    property_id: GenericUUID
-    strategy_type: OperationType
-    achievement_type: AchievementType
-    status: StrategyStatus
-
-class PartnerWasRemoved(PartnerWasAdded):
-    ...
-
-class PartnerWasUpdated(PartnerWasAdded):
-    ...

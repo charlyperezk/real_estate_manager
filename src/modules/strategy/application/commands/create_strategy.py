@@ -1,11 +1,10 @@
 from typing import Optional
 from lato import TransactionContext
 from src.seedwork.application.commands import Command
-from src.seedwork.domain.value_objects import GenericUUID
+from src.seedwork.domain.value_objects import GenericUUID, Money
 from src.seedwork.infrastructure.logging import Logger
 from .. import strategy_module
 from ...domain.entities import Fee, Strategy, OperationType, DateRange
-from ...domain.value_objects.money import Money
 from ...domain.repositories import StrategyRepository
 from ...domain.events import StrategyWasActivated
 from ...domain.service import StrategyService
@@ -41,12 +40,13 @@ async def create_strategy(command: CreateStrategy, strategy_repository: Strategy
         
     strategy.register_event(
         StrategyWasActivated(
-            id=command.id,
-            property_id=command.property_id,
-            period=command.period,
-            type=command.type,
-            price=command.price,
-            deposit=command.deposit if command.deposit else Money(amount=0, currency=command.price.currency),
+            strategy_id=strategy.id,
+            property_id=strategy.property_id,
+            period=strategy.period,
+            type=strategy.type,
+            price=strategy.price,
+            fee=strategy.fee,
+            deposit=strategy.deposit, # type: ignore
             terms_conditions=strategy.terms_conditions
         )
     )    

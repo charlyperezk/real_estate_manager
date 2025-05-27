@@ -13,7 +13,7 @@ OWN = "own"
 class Operation(AggregateRoot):
     property_id: GenericUUID
     strategy_id: GenericUUID
-    operation: OperationType
+    type: OperationType
     fee: Fee
     amount: Money
     achievement_type: AchievementType
@@ -41,6 +41,7 @@ class Operation(AggregateRoot):
     
     def cancel(self) -> None:
         assert self.status != OperationStatus.CANCELLED, "The operation status is already cancelled"
+        
         self.updated_at = datetime.now()
         self.status = OperationStatus.CANCELLED
 

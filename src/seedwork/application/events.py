@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from lato.message import Message
 from src.seedwork.domain.type_hints import DomainEvent
 from src.seedwork.domain.value_objects import GenericUUID
 
@@ -12,7 +13,7 @@ class EventId(GenericUUID):
     """Unique identifier of an event"""
 
 
-class IntegrationEvent(BaseModel):
+class IntegrationEvent(Message):
     """
     Integration events are used to communicate between modules/system via inbox-outbox pattern.
     They are created in a domain event handler and then saved in an outbox for further delivery.

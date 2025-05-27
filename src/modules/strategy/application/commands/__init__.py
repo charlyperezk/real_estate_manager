@@ -1,2 +1,4 @@
 from .create_strategy import CreateStrategy
+from .activate_strategy import ActivateStrategy
 from .set_term_to_strategy import SetTermToStrategy
+from .delete_term_from_strategy import DeleteTermFromStrategy

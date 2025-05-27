@@ -6,7 +6,7 @@ from .partnership import Partnership, OperationType
 from .status import PartnershipStatus
 from .types import PartnershipType
 from .value_objects.partner_fee import PartnerFee
-from .operations import Operation, Operations, AchievementType, OperationStatus
+from .operations import PartnerOperation, Operations, AchievementType, OperationStatus
 from .events import (
     PartnerFeeAddedToPartnership,
     PartnerFeeUpdated,
@@ -24,8 +24,8 @@ class Partner(AggregateRoot):
     name: str
     user_id: GenericUUID
     type: PartnershipType
-    partnership: Partnership
-    status: PartnershipStatus = field(default=PartnershipStatus.ACTIVE)
+    partnership: Partnership = field(default_factory=Partnership)
+    status: PartnershipStatus = field(default=PartnershipStatus.PENDENT)
     operations: Operations = field(default_factory=Operations)
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -48,11 +48,13 @@ class Partner(AggregateRoot):
             )
         )
 
-    def get_fees(self, operation_type: OperationType) -> List[PartnerFee]:
+    def get_fees(self, operation_type: Optional[OperationType]=None) -> List[PartnerFee]:
         return self.partnership.get_fees(type=operation_type)
     
     def activate(self) -> None:
         assert self.status != PartnershipStatus.ACTIVE
+        assert any(self.partnership.get_fees()), "Partner must have a setted partnership to be activated"
+        
         self.status = PartnershipStatus.ACTIVE
         self.register_event(
             PartnershipWasActivated(
@@ -79,13 +81,13 @@ class Partner(AggregateRoot):
             self,
             status: Optional[OperationStatus]=None,
             achievement_type: Optional[AchievementType]=None
-    ) -> List[Operation]:
+    ) -> List[PartnerOperation]:
         return self.operations.get_operations(status=status, achievement_type=achievement_type)
     
-    def get_operation_by_id(self, operation_id: GenericUUID) -> Operation:
+    def get_operation_by_id(self, operation_id: GenericUUID) -> PartnerOperation:
         return self.operations.get_operation_by_id(operation_id=operation_id)
     
-    def add_operation(self, operation: Operation) -> None:
+    def add_operation(self, operation: PartnerOperation) -> None:
         self.operations.register_operation(operation=operation)        
         self.register_event(
             OperationAddedToPartner(

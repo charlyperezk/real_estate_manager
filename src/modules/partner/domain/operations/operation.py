@@ -7,7 +7,7 @@ from ....shared_kernel.operation_types import OperationType
 from ....shared_kernel.status import OperationStatus
 
 @dataclass
-class Operation(Entity):
+class PartnerOperation(Entity):
     fee: Fee
     amount: Money
     strategy_id: GenericUUID

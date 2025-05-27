@@ -6,7 +6,7 @@ from src.seedwork.infrastructure.logging import Logger
 from .. import strategy_module
 from ...domain.entities import Fee, Strategy, OperationType, DateRange
 from ...domain.repositories import StrategyRepository
-from ...domain.events import StrategyWasActivated
+from ...domain.events import StrategyWasCreated
 from ...domain.service import StrategyService
 
 class CreateStrategy(Command):
@@ -39,7 +39,7 @@ async def create_strategy(command: CreateStrategy, strategy_repository: Strategy
         service.strategy_can_be_register(strategy=strategy)
         
     strategy.register_event(
-        StrategyWasActivated(
+        StrategyWasCreated(
             strategy_id=strategy.id,
             property_id=strategy.property_id,
             period=strategy.period,

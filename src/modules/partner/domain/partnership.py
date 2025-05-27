@@ -1,13 +1,11 @@
-from enum import Enum
 from typing import List, Optional, List
-from dataclasses import dataclass
-from src.seedwork.domain.mixins import check_rule
+from dataclasses import dataclass, field
 from .operation_types import OperationType
 from .value_objects.partner_fee import PartnerFee
 
 @dataclass
 class Partnership:
-    fees: List[PartnerFee]
+    fees: List[PartnerFee] = field(default_factory=list)        
 
     def get_fees(self, type: Optional[OperationType]=None) -> List[PartnerFee]:
         fees = self.fees

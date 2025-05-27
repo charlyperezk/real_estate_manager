@@ -6,7 +6,15 @@ from ...shared_kernel.achievement_types import AchievementType
 from ...shared_kernel.operation_types import OperationType
 from ...shared_kernel.status import OperationStatus
 
-class OperationWasCreated(DomainEvent):
+class ManagementOperationWasStarted(DomainEvent):
+    operation_id: GenericUUID
+    property_id: GenericUUID
+    type: OperationType
+    status: OperationStatus
+    created_at: datetime
+    description: str
+
+class PartnerOperationWasCreated(DomainEvent):
     operation_id: GenericUUID
     property_id: GenericUUID
     partner_id: Union[str, GenericUUID]

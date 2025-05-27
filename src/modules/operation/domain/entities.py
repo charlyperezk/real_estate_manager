@@ -7,19 +7,19 @@ from ...shared_kernel.operation_types import OperationType
 from ...shared_kernel.achievement_types import AchievementType
 from ...shared_kernel.status import OperationStatus
 
-OWN = "own"
+OWN = GenericUUID(int=1)
 
 @dataclass
 class Operation(AggregateRoot):
     property_id: GenericUUID
     strategy_id: GenericUUID
+    partner_id: GenericUUID
     type: OperationType
     fee: Fee
     amount: Money
     achievement_type: AchievementType
     description: str
     status: OperationStatus = field(default=OperationStatus.ACTIVE)
-    partner_id: Union[str, GenericUUID] = field(default=OWN)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     in_progress_at: Optional[datetime] = field(default=None)

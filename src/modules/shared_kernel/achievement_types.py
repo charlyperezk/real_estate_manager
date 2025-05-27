@@ -1,5 +1,6 @@
 from enum import Enum
 
 class AchievementType(str, Enum):
-    capture = "capture"
-    close = "close"
+    MANAGEMENT = "management"
+    CAPTURE = "capture"
+    CLOSE = "close"

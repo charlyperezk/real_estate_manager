@@ -1,1 +1,1 @@
-from .on_strategy_activated import StrategyWasActivated
+from .on_strategy_created import StrategyWasCreated

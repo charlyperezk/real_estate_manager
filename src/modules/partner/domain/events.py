@@ -1,7 +1,7 @@
 from src.seedwork.domain.value_objects import GenericUUID
 from src.seedwork.domain.events import DomainEvent
 from .types import PartnershipType
-from .operations import Operations, Operation
+from .operations import Operations, PartnerOperation
 from .value_objects.partner_fee import PartnerFee
 
 class PartnershipWasActivated(DomainEvent):
@@ -25,7 +25,7 @@ class PartnerStatusWasChanged(PartnerFeeAddedToPartnership):
 
 class OperationAddedToPartner(DomainEvent):
     partner_id: GenericUUID
-    operation: Operation
+    operation: PartnerOperation
 
 class OperationDeletedFromPartner(OperationAddedToPartner):
     ...

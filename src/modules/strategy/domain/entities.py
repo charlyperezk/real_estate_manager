@@ -38,9 +38,10 @@ class Strategy(AggregateRoot):
     accepted_by_customer_id: Optional[GenericUUID] = field(default=None)
 
     def __post_init__(self):
+        self.check_rule(DaysBeforeRenewAlertMustGreatherThanZero(days=self.renew_alert.notice_days_threshold))        
+
         if not self.deposit:
             self.deposit = Money(amount=0, currency=self.price.currency)
-        self.check_rule(DaysBeforeRenewAlertMustGreatherThanZero(days=self.renew_alert.notice_days_threshold))        
 
     @property
     def completed(self) -> bool:
@@ -100,6 +101,7 @@ class Strategy(AggregateRoot):
 
     def activate(self) -> None:
         assert self.status != StrategyStatus.ACTIVE, "Strategy is already active"
+        assert self.status != StrategyStatus.COMPLETED, "Strategy was completed"
         self.check_rule(PeriodMustBeOnGoing(period=self.period))
         
         self.status = StrategyStatus.ACTIVE
@@ -108,6 +110,7 @@ class Strategy(AggregateRoot):
                 property_id=self.property_id,
                 strategy_id=self.id,
                 price=self.price,
+                fee=self.fee,
                 period=self.period,
                 deposit=self.deposit, #type: ignore
                 terms_conditions=self.terms_conditions,
@@ -128,6 +131,7 @@ class Strategy(AggregateRoot):
 
     def pause(self) -> None:
         assert self.status != StrategyStatus.PAUSED, "Strategy is already paused"
+        assert self.status != StrategyStatus.COMPLETED, "Strategy was completed"
         assert self.period.on_going, "Period isn't on going"
 
         self.status = StrategyStatus.PAUSED
@@ -139,6 +143,8 @@ class Strategy(AggregateRoot):
         )
 
     def mark_as_completed(self) -> None:
+        assert self.status != StrategyStatus.COMPLETED, "Strategy is already completed"
+        
         self.status = StrategyStatus.COMPLETED
         self.accepted_by_customer_id = GenericUUID.next_id()
         self.register_event(
@@ -161,18 +167,13 @@ class Strategy(AggregateRoot):
 
     @check_status_is_not_discontinued
     def register_term(self, term: Term) -> None:
+        assert self.status != StrategyStatus.COMPLETED, "Strategy is already completed"
+        
         self.terms_conditions.register_term(term)
         self.register_event(TermWasAdded(strategy_id=self.id, term=term))
 
     def delete_term(self, term_type: TermIdentifier) -> None:
+        assert self.status != StrategyStatus.COMPLETED, "Strategy is already completed"
+        
         self.terms_conditions.delete_term(term_type)
         self.register_event(TermWasRemoved(strategy_id=self.id, term_type=term_type))
-
-@dataclass
-class Owner:
-    name: str
-    email: str
-    phone: str
-    address: str
-    city: str
-    properties: List[GenericUUID] = field(default_factory=list)

@@ -20,6 +20,16 @@ from ..modules.strategy.infrastructure.strategy_postgres_repository import (
     StrategyPostgresJsonManagementRepository
 )
 
+from ..modules.partner.application import partner_module
+from ..modules.partner.infrastructure.partner_postgres_repository import (
+    PartnerPostgresJsonManagementRepository
+)
+
+from ..modules.operation.application import operation_module
+from ..modules.operation.infrastructure.operation_postgres_repository import (
+    OperationPostgresJsonManagementRepository
+)
+
 from src.seedwork.application.inbox_outbox import InMemoryOutbox
 from src.seedwork.infrastructure.logging import Logger, logger
 
@@ -60,6 +70,10 @@ def create_application(db_engine) -> Application:
         app_version=0.1,
         db_engine=db_engine,
     )
+
+    application.include_submodule(strategy_module)
+    application.include_submodule(partner_module)
+    application.include_submodule(operation_module)
 
     @application.on_create_transaction_context
     def on_create_transaction_context(**kwargs):
@@ -168,6 +182,16 @@ class TransactionContainer(containers.DeclarativeContainer):
 
     strategy_repository = providers.Singleton(
         StrategyPostgresJsonManagementRepository,
+        db_session=db_session,
+    )
+
+    partner_repository = providers.Singleton(
+        PartnerPostgresJsonManagementRepository,
+        db_session=db_session,
+    )
+
+    operation_repository = providers.Singleton(
+        OperationPostgresJsonManagementRepository,
         db_session=db_session,
     )
 

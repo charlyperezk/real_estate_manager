@@ -2,7 +2,7 @@ from dataclasses import dataclass, field, replace
 from typing import List, Optional
 from src.seedwork.domain.mixins import check_rule
 from src.seedwork.domain.value_objects import GenericUUID
-from .operation import Operation
+from .operation import PartnerOperation
 from ....shared_kernel.status import OperationStatus
 from ....shared_kernel.achievement_types import AchievementType
 
@@ -15,14 +15,14 @@ def auto_refresh_operations(method):
 
 @dataclass
 class Operations:
-    operations: List[Operation] = field(default_factory=list)
+    operations: List[PartnerOperation] = field(default_factory=list)
     registered_operations: int = 0
 
     def refresh_registered_operations_quantity(self) -> None:
         self.registered_operations = len(self.get_operations())
 
     @auto_refresh_operations
-    def register_operation(self, operation: Operation) -> None:
+    def register_operation(self, operation: PartnerOperation) -> None:
         assert not any(
             self.get_operations(achievement_type=operation.achievement_type)
         ), f"Operation of type {operation.achievement_type} is already in operations"
@@ -43,7 +43,7 @@ class Operations:
             self,
             status: Optional[OperationStatus]=None,
             achievement_type: Optional[AchievementType]=None
-    ) -> List[Operation]:
+    ) -> List[PartnerOperation]:
         operations = self.operations
         if status:
             operations = [operation for operation in operations if operation.status == status]
@@ -51,7 +51,7 @@ class Operations:
             operations = [operation for operation in operations if operation.achievement_type == achievement_type]
         return self.operations
 
-    def get_operation_by_id(self, operation_id: GenericUUID) -> Operation:
+    def get_operation_by_id(self, operation_id: GenericUUID) -> PartnerOperation:
         operation = next((op for op in self.operations if op.id == operation_id))
         assert operation, "Operation not found"
         return operation

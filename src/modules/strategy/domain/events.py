@@ -10,7 +10,7 @@ https://medium.com/@dkraczkowski/events-in-domain-driven-design-event-propagatio
 """
 
 # Strategy events
-class StrategyWasActivated(DomainEvent):
+class StrategyWasCreated(DomainEvent):
     strategy_id: GenericUUID
     property_id: GenericUUID
     price: Money
@@ -19,6 +19,9 @@ class StrategyWasActivated(DomainEvent):
     terms_conditions: TermsAndConditions
     type: OperationType
     period: DateRange
+
+class StrategyWasActivated(StrategyWasCreated):
+    ...
 
 class StrategyWasDiscontinued(DomainEvent):
     strategy_id: GenericUUID

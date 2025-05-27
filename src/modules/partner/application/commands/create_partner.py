@@ -10,7 +10,6 @@ class CreatePartner(Command):
     name: str
     user_id: GenericUUID
     type: PartnershipType
-    partnership: Partnership
 
 @partner_module.handler(CreatePartner)
 async def create_partner(command: CreatePartner, partner_repository: PartnerRepository, logger: Logger) -> Partner:
@@ -21,7 +20,6 @@ async def create_partner(command: CreatePartner, partner_repository: PartnerRepo
         name=command.name,
         user_id=command.user_id,
         type=command.type,
-        partnership=command.partnership
     )
         
     partner.register_event(

@@ -45,23 +45,21 @@ def instantiate_terms(raw_terms: List[Dict[str, Union[str, bool]]]) -> List[Term
     return [cast_term_from_dict(term) for term in raw_terms]
 
 class StrategyModel(Base):
-    """Data model for listing domain object"""
-
     __tablename__ = "strategies"
     id = Column(UUIDType(binary=False), primary_key=True, default=uuid.uuid4)
-    type = Column(String)
-    price = Column(Float)
-    currency = Column(String)
-    fee = Column(Float)
-    exclusivity = Column(Boolean)
-    property_id = Column(UUIDType(binary=False), index=True)
-    deposit = Column(Float)
-    deposit_currency = Column(String)
-    start = Column(DateTime)
+    type = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    currency = Column(String, nullable=False)
+    fee = Column(Float, nullable=False)
+    exclusivity = Column(Boolean, nullable=False)
+    property_id = Column(UUIDType(binary=False), index=True, nullable=False)
+    deposit = Column(Float, nullable=False)
+    deposit_currency = Column(String, nullable=False)
+    start = Column(DateTime, nullable=False)
     end = Column(DateTime)
-    renew_alert = Column(Boolean)
-    days_before_renew_alert = Column(Integer)
-    status = Column(String)
+    renew_alert = Column(Boolean, nullable=False)
+    days_before_renew_alert = Column(Integer, nullable=False)
+    status = Column(String, nullable=False)
     accepted_by_customer_id = Column(UUIDType(binary=False), nullable=True)
     data = Column(mutable_json_type(dbtype=JSONB, nested=True))
 
@@ -115,7 +113,5 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
         )
 
 class StrategyPostgresJsonManagementRepository(StrategyRepository, SqlAlchemyGenericRepository): #type: ignore
-    """Listing repository implementation"""
-
     mapper_class = StrategyDataMapper #type: ignore
     model_class = StrategyModel

@@ -3,7 +3,6 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Dict
 from src.seedwork.domain.value_objects import Money, Currency
-from src.seedwork.domain.entities import GenericUUID, Entity
 
 @dataclass
 class PartnerPerformance:

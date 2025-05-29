@@ -27,8 +27,8 @@ from .events import (
 
 @dataclass
 class Partner(AggregateRoot):
-    name: str
     user_id: GenericUUID
+    name: str
     tier: PartnerTier = field(default=PartnerTier.JUNIOR)
     fee_policies: Dict[AchievementType, FeePolicy] = field(default_factory=lambda: POLICIES[PartnerTier.JUNIOR])
     targets_log: TargetsLog = field(default_factory=TargetsLog)

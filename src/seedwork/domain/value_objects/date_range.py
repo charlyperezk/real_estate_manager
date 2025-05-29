@@ -1,4 +1,5 @@
 from __future__ import annotations
+import calendar
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from .value_objects import ValueObject
@@ -10,6 +11,10 @@ class DateRange(ValueObject):
 
     def __post_init__(self):
         assert self.start < self.end, "Start date must be before the end date"
+
+    @property
+    def year_month_start_format(self) -> str:
+        return self.start.strftime("%Y-%m")
 
     @property
     def already_started(self) -> bool:
@@ -51,6 +56,15 @@ class DateRange(ValueObject):
     def from_now_to(**period: float) -> DateRange:
         end_period_datetime = DateRange.add_period_to_datetime(_from=datetime.now(), **period)
         return DateRange.create_range_starting_now(end_period_datetime)
+
+    @staticmethod
+    def current_period() -> DateRange:
+        now = datetime.now()
+        start_date = datetime(now.year, now.month, 1)
+        last_day = calendar.monthrange(now.year, now.month)[1]
+        end_date = datetime(now.year, now.month, last_day, 23, 59, 59, 999999)
+
+        return DateRange(start=start_date, end=end_date)
 
     def relative_date_days_left(self, date: datetime) -> int:
         return DateRange(date, self.end).period_range_days if not self.finished else 0

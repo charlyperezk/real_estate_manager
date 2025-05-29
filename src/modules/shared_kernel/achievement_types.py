@@ -4,3 +4,4 @@ class AchievementType(str, Enum):
     MANAGEMENT = "management"
     CAPTURE = "capture"
     CLOSE = "close"
+    OTHER = "other"

@@ -1,40 +1,26 @@
 from src.seedwork.domain.value_objects import GenericUUID
 from src.seedwork.domain.events import DomainEvent
-from .types import PartnershipType
-from .operations import Operations, PartnerOperation
-from .value_objects.partner_fee import PartnerFee
+from .enums import PartnerTier
+from ...shared_kernel import PartnershipStatus
+from .performance import PartnerPerformance
 
-class PartnershipWasActivated(DomainEvent):
+class PartnerCreated(DomainEvent):
+    ...
+
+class PartnerWasActivated(DomainEvent):
     partner_id: GenericUUID
     user_id: GenericUUID
-    type: PartnershipType
-    operations: Operations
+    status: PartnershipStatus
+    tier: PartnerTier
+    name: str
 
-class PartnershipWasFinished(PartnershipWasActivated):
+class PartnerWasBanned(PartnerWasActivated):
     ...
 
-class PartnerFeeAddedToPartnership(DomainEvent):
+class PartnerTierWasUpdated(DomainEvent):
     partner_id: GenericUUID
-    fee: PartnerFee
+    tier: PartnerTier
 
-class PartnerFeeUpdated(PartnerFeeAddedToPartnership):
-    ...
-
-class PartnerStatusWasChanged(PartnerFeeAddedToPartnership):
-    ...
-
-class OperationAddedToPartner(DomainEvent):
+class PartnerAchievementWasRegistered(DomainEvent):
     partner_id: GenericUUID
-    operation: PartnerOperation
-
-class OperationDeletedFromPartner(OperationAddedToPartner):
-    ...
-
-class PartnerOperationStatusChangedToPaid(OperationAddedToPartner):
-    ...
-
-class PartnerOperationStatusChangedToInProgress(OperationAddedToPartner):
-    ...
-
-class PartnerOperationStatusChangedToCancelled(OperationAddedToPartner):
-    ...
+    performance: PartnerPerformance

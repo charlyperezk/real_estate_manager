@@ -4,7 +4,6 @@ from ....shared_kernel.integration_events.after_create_strategy_create_managemen
 from .. import strategy_module
 from ...domain.events import StrategyWasCreated
 
-
 @strategy_module.handler(StrategyWasCreated)
 async def on_strategy_created(event: StrategyWasCreated, logger: Logger, ctx: TransactionContext):
     logger.info("Reacting to StrategyWasCreated -> Publishing integration event OnAfterCreateStrategyCreateManagementOperation")

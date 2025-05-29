@@ -1,15 +1,16 @@
+from typing import Optional
 from src.seedwork.application.commands import Command
 from src.seedwork.domain.value_objects import GenericUUID
 from src.seedwork.infrastructure.logging import Logger
 from .. import partner_module
-from ...domain.entities import Partner, PartnershipType, Partnership
+from ...domain.entities import Partner, PartnerTier
 from ...domain.repositories import PartnerRepository
-from ...domain.events import PartnershipWasActivated
+from ...domain.events import PartnerWasActivated
 
 class CreatePartner(Command):
     name: str
     user_id: GenericUUID
-    type: PartnershipType
+    tier: Optional[PartnerTier] = None
 
 @partner_module.handler(CreatePartner)
 async def create_partner(command: CreatePartner, partner_repository: PartnerRepository, logger: Logger) -> Partner:
@@ -19,18 +20,17 @@ async def create_partner(command: CreatePartner, partner_repository: PartnerRepo
         id=command.id,
         name=command.name,
         user_id=command.user_id,
-        type=command.type,
     )
         
     partner.register_event(
-        PartnershipWasActivated(
+        PartnerWasActivated(
+            status=partner.status,
             partner_id=partner.id,
-            operations=partner.operations,
-            type=partner.type,
             user_id=partner.user_id,
+            name=partner.name,
+            tier=partner.tier
         )
     )    
 
     partner_repository.add(entity=partner)
-
     return partner

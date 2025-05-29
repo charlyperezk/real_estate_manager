@@ -4,7 +4,7 @@ from src.seedwork.domain.value_objects import GenericUUID
 from src.seedwork.domain.events import DomainEvent
 from ...shared_kernel.achievement_types import AchievementType
 from ...shared_kernel.operation_types import OperationType
-from ...shared_kernel.status import OperationStatus
+from .operation_status import OperationStatus
 
 class ManagementOperationWasStarted(DomainEvent):
     operation_id: GenericUUID

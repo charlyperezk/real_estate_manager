@@ -3,7 +3,7 @@ from src.seedwork.application.commands import Command
 from src.seedwork.domain.value_objects import GenericUUID, Fee, Money
 from src.seedwork.infrastructure.logging import Logger
 from .. import operation_module
-from ...domain.entities import Operation, OperationType, AchievementType, OWN
+from ...domain.entities import Operation, OperationType, AchievementType
 from ...domain.repositories import OperationRepository
 from ...domain.events import ManagementOperationWasStarted
 from ....shared_kernel.integration_events.after_create_strategy_create_management_operation import (
@@ -19,15 +19,19 @@ class CreateManagementOperation(Command):
     description: str
 
 @operation_module.handler(CreateManagementOperation)
-async def create_management_operation(command: CreateManagementOperation,
-                                       operation_repository: OperationRepository, logger: Logger) -> Operation:
+async def create_management_operation(
+        command: CreateManagementOperation,
+        operation_repository: OperationRepository,
+        logger: Logger
+    ) -> Operation:
+    
     logger.info("Creating management operation")
 
     operation = Operation(
         id=command.id,
         strategy_id=command.strategy_id,
         property_id=command.property_id,
-        partner_id=OWN,
+        partner_id=GenericUUID(int=1),
         achievement_type=AchievementType.MANAGEMENT,
         type=command.type,
         fee=command.fee,

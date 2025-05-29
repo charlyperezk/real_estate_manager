@@ -17,7 +17,7 @@ class Money(ValueObject):
         return f"Money(amount={round(self.amount, 2)} currency={str(self.currency.value)})"
 
     def __post_init__(self):
-        assert self.amount > 0, "Amount must be greather than 0"
+        assert self.amount >= 0, "Amount must be greather than 0"
 
     def __lt__(self, other: Money) -> bool:
         return self.amount < other.amount

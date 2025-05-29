@@ -1,3 +1,4 @@
-from .achievement_types import AchievementType
+from ..partner.domain.enums.partnership_status import PartnershipStatus
 from .operation_types import OperationType
-from .status import OperationStatus
+from .partnership_types import PartnershipType
+from .achievement_types import AchievementType

@@ -1,6 +1,5 @@
 from lato import Query
 from typing import List
-from src.seedwork.domain.value_objects import GenericUUID
 from .. import partner_module
 from ...domain.repositories import PartnerRepository, Partner
 

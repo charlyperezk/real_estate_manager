@@ -2,7 +2,6 @@ from src.seedwork.domain.value_objects import GenericUUID, Currency, Money
 from src.config.container import create_application, create_db_engine
 from src.config.api_config import ApiConfig
 
-from src.modules.strategy.application import strategy_module
 from src.modules.strategy.application.commands import CreateStrategy, ActivateStrategy
 from src.modules.strategy.application.queries import GetStrategy
 from src.modules.strategy.application.commands.set_term_to_strategy import SetTermToStrategy

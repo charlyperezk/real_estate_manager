@@ -1,143 +1,102 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import List, Optional
 from dataclasses import dataclass, field
+from typing import Dict
+from src.seedwork.domain.value_objects import Money
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
-from .partnership import Partnership, OperationType
-from .status import PartnershipStatus
-from .types import PartnershipType
-from .value_objects.partner_fee import PartnerFee
-from .operations import PartnerOperation, Operations, AchievementType, OperationStatus
+from .default_policies import POLICIES
+from .value_objects import FeePolicy
+from .enums import PartnerTier
+from .targets_log import TargetsLog
+from .performance import PartnerPerformance
+
+from ...shared_kernel import (
+    PartnershipStatus,
+    AchievementType
+)
+from .rules import (
+    PartnershipStatusMustNotBeAlreadyActive,
+    PartnershipStatusMustNotBeBanned
+)
 from .events import (
-    PartnerFeeAddedToPartnership,
-    PartnerFeeUpdated,
-    PartnershipWasActivated,
-    PartnershipWasFinished,
-    PartnerOperationStatusChangedToPaid,
-    PartnerOperationStatusChangedToInProgress,
-    PartnerOperationStatusChangedToCancelled,
-    OperationAddedToPartner,
-    OperationDeletedFromPartner
+    PartnerWasActivated,
+    PartnerWasBanned,
+    PartnerTierWasUpdated,
+    PartnerAchievementWasRegistered
 )
 
 @dataclass
 class Partner(AggregateRoot):
     name: str
     user_id: GenericUUID
-    type: PartnershipType
-    partnership: Partnership = field(default_factory=Partnership)
-    status: PartnershipStatus = field(default=PartnershipStatus.PENDENT)
-    operations: Operations = field(default_factory=Operations)
+    tier: PartnerTier = field(default=PartnerTier.JUNIOR)
+    fee_policies: Dict[AchievementType, FeePolicy] = field(default_factory=lambda: POLICIES[PartnerTier.JUNIOR])
+    targets_log: TargetsLog = field(default_factory=TargetsLog)
+    status: PartnershipStatus = field(default=PartnershipStatus.INACTIVE)
     created_at: datetime = field(default_factory=datetime.now)
 
-    def add_fee(self, partner_fee: PartnerFee) -> None:
-        # Verificar que no este finalizado el partner
-        self.partnership.add_fee(partner_fee)
+    def set_tier_and_fee_policies(self, tier: PartnerTier, fee_policies: Dict[AchievementType, FeePolicy]) -> None:
+        self.check_rule(PartnershipStatusMustNotBeBanned(status=self.status))
+
+        self.tier = tier
+        self.fee_policies = fee_policies
         self.register_event(
-            PartnerFeeAddedToPartnership(
+            PartnerTierWasUpdated(
                 partner_id=self.id,
-                fee=partner_fee
+                tier=tier
             )
         )
 
-    def update_fee(self, partner_fee: PartnerFee) -> None:
-        self.partnership.update_fee(partner_fee)
+    def get_targets_log(self) -> Dict[str, PartnerPerformance]:
+        return self.targets_log.get_all()
+
+    def get_performance_by_period(self, period: str) -> PartnerPerformance:
+        return self.targets_log.get_or_create_period_performance(period=period)
+
+    def set_performance(self, period: str, performance: PartnerPerformance) -> None:
+        self.targets_log.persist(period=period, performance=performance)
+
+    def register_achievement(self, achievement_type: AchievementType, period: str, revenue_amount: Money) -> None:
+        performance = self.get_performance_by_period(period=period)
+        
+        if achievement_type == AchievementType.CLOSE:
+            performance.register_close(amount=revenue_amount)        
+        elif achievement_type == AchievementType.CAPTURE:
+            performance.register_capture(amount=revenue_amount)        
+        
+        self.targets_log.persist(period=period, performance=performance)
+        
         self.register_event(
-            PartnerFeeUpdated(
+            PartnerAchievementWasRegistered(
                 partner_id=self.id,
-                fee=partner_fee
+                performance=performance
             )
         )
 
-    def get_fees(self, operation_type: Optional[OperationType]=None) -> List[PartnerFee]:
-        return self.partnership.get_fees(type=operation_type)
-    
     def activate(self) -> None:
-        assert self.status != PartnershipStatus.ACTIVE
-        assert any(self.partnership.get_fees()), "Partner must have a setted partnership to be activated"
+        self.check_rule(PartnershipStatusMustNotBeAlreadyActive(status=self.status))
         
         self.status = PartnershipStatus.ACTIVE
         self.register_event(
-            PartnershipWasActivated(
+            PartnerWasActivated(
+                status=self.status,
                 partner_id=self.id,
                 user_id=self.user_id,
-                type=self.type,
-                operations=self.operations
+                name=self.name,
+                tier=self.tier
             )
         )
 
-    def finish(self) -> None:
-        assert self.status != PartnershipStatus.FINISHED
-        self.status = PartnershipStatus.FINISHED
+    def ban(self) -> None:
+        self.check_rule(PartnershipStatusMustNotBeBanned(status=self.status))
+
+        self.status = PartnershipStatus.BANNED
         self.register_event(
-            PartnershipWasFinished(
+            PartnerWasBanned(
+                status=self.status,
                 partner_id=self.id,
                 user_id=self.user_id,
-                type=self.type,
-                operations=self.operations
+                name=self.name,
+                tier=self.tier
             )
         )
-
-    def get_operations(
-            self,
-            status: Optional[OperationStatus]=None,
-            achievement_type: Optional[AchievementType]=None
-    ) -> List[PartnerOperation]:
-        return self.operations.get_operations(status=status, achievement_type=achievement_type)
-    
-    def get_operation_by_id(self, operation_id: GenericUUID) -> PartnerOperation:
-        return self.operations.get_operation_by_id(operation_id=operation_id)
-    
-    def add_operation(self, operation: PartnerOperation) -> None:
-        self.operations.register_operation(operation=operation)        
-        self.register_event(
-            OperationAddedToPartner(
-                partner_id=self.id,
-                operation=operation
-            )
-        )
-
-    def _set_operation_status(self, operation_id: GenericUUID, status: OperationStatus) -> None:
-        operation = self.get_operation_by_id(operation_id=operation_id)
-        assert operation.status != status, "The provided status is already set"
-
-        self.operations.update_operation(
-            operation_id=operation_id,
-            status=status
-        )
-
-    def mark_operation_as_paid(self, operation_id: GenericUUID) -> None:
-        self._set_operation_status(operation_id=operation_id, status=OperationStatus.PAID)
-        self.register_event(
-            PartnerOperationStatusChangedToPaid(
-                partner_id=self.id,
-                operation=self.get_operation_by_id(operation_id=operation_id)
-            )
-        )
-
-    def mark_operation_as_in_progress(self, operation_id: GenericUUID) -> None:
-        self._set_operation_status(operation_id=operation_id, status=OperationStatus.IN_PROGRESS)
-        self.register_event(
-            PartnerOperationStatusChangedToInProgress(
-                partner_id=self.id,
-                operation=self.get_operation_by_id(operation_id=operation_id)
-            )
-        )
-
-    def cancel_operation(self, operation_id: GenericUUID) -> None:
-        self._set_operation_status(operation_id=operation_id, status=OperationStatus.CANCELLED)
-        self.register_event(
-            PartnerOperationStatusChangedToCancelled(
-                partner_id=self.id,
-                operation=self.get_operation_by_id(operation_id=operation_id)
-            )
-        )
-
-    def delete_operation(self, operation_id: GenericUUID) -> None:
-        self.operations.delete_operation(operation_id=operation_id)
-        self.register_event(
-            OperationDeletedFromPartner(
-                partner_id=self.id,
-                operation=self.get_operation_by_id(operation_id=operation_id)
-            )
-        )
-        

@@ -60,7 +60,6 @@ class StrategyModel(Base):
     renew_alert = Column(Boolean, nullable=False)
     days_before_renew_alert = Column(Integer, nullable=False)
     status = Column(String, nullable=False)
-    accepted_by_customer_id = Column(UUIDType(binary=False), nullable=True)
     data = Column(mutable_json_type(dbtype=JSONB, nested=True))
 
 class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
@@ -75,12 +74,11 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
             property_id=instance.property_id, #type: ignore
             deposit=Money(amount=instance.deposit, currency=Currency(instance.deposit_currency)), #type: ignore
             period=DateRange(start=instance.start, end=instance.end), #type: ignore
-            renew_alert=RenewAlert(
+            renew_alert=RenewAlert( 
                 active=instance.renew_alert, #type: ignore
                 notice_days_threshold=instance.days_before_renew_alert #type: ignore
             ),
             status=StrategyStatus(instance.status), #type: ignore
-            accepted_by_customer_id=instance.accepted_by_customer_id, #type: ignore
             terms_conditions=TermsAndConditions( #type: ignore
                 terms=instantiate_terms(raw_terms=d["terms_conditions"]["terms"]), #type: ignore 
                 registered_terms=int(d["terms_conditions"]["registered_terms"]) #type: ignore
@@ -103,7 +101,6 @@ class StrategyDataMapper(DataMapper[Strategy, StrategyModel]):
             renew_alert=entity.renew_alert.active,
             days_before_renew_alert=entity.renew_alert.notice_days_threshold, # type: ignore
             status=entity.status,
-            accepted_by_customer_id=entity.accepted_by_customer_id,
             data={
                 "terms_conditions": {
                     "terms": entity.terms_conditions.get_terms(),

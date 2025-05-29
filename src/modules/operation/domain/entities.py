@@ -1,22 +1,20 @@
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional
 from dataclasses import dataclass, field
-from src.seedwork.domain.entities import GenericUUID, AggregateRoot
+from src.seedwork.domain.entities import GenericUUID, AggregateRoot, Entity
 from src.seedwork.domain.value_objects import Money, Fee
-from ...shared_kernel.operation_types import OperationType
+from ...shared_kernel import OperationType, PartnershipStatus, PartnershipType
 from ...shared_kernel.achievement_types import AchievementType
-from ...shared_kernel.status import OperationStatus
-
-OWN = GenericUUID(int=1)
+from .operation_status import OperationStatus
 
 @dataclass
 class Operation(AggregateRoot):
     property_id: GenericUUID
     strategy_id: GenericUUID
-    partner_id: GenericUUID
     type: OperationType
     fee: Fee
     amount: Money
+    partner_id: GenericUUID
     achievement_type: AchievementType
     description: str
     status: OperationStatus = field(default=OperationStatus.ACTIVE)

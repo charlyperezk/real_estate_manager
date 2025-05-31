@@ -1,5 +1,4 @@
 from typing import Optional
-from lato import TransactionContext
 from src.seedwork.application.commands import Command
 from src.seedwork.domain.value_objects import GenericUUID, Money
 from src.seedwork.infrastructure.logging import Logger
@@ -52,5 +51,4 @@ async def create_strategy(command: CreateStrategy, strategy_repository: Strategy
     )    
 
     strategy_repository.add(entity=strategy)
-
     return strategy

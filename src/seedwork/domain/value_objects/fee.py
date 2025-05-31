@@ -8,3 +8,9 @@ class Fee(ValueObject):
 
     def __post_init__(self):
         assert self.value > 0, "Fee value must be greather than 0"
+
+    def __add__(self, value: Fee) -> Fee:
+        return Fee(value=self.value + value.value)
+    
+    def __sub__(self, value: Fee) -> Fee:
+        return Fee(value=self.value - value.value)

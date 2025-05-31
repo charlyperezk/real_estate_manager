@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from dataclasses import dataclass, field
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
 from src.seedwork.domain.value_objects import Money, Fee
@@ -8,7 +8,7 @@ from ...shared_kernel.achievement_types import AchievementType
 from .operation_status import OperationStatus
 
 @dataclass
-class Operation(AggregateRoot):    
+class Operation(AggregateRoot):
     property_id: GenericUUID
     strategy_id: GenericUUID
     partner_id: GenericUUID
@@ -17,7 +17,7 @@ class Operation(AggregateRoot):
     fee: Fee
     amount: Money
     description: str
-    status: OperationStatus = field(default=OperationStatus.IN_PROGRESS)
+    status: OperationStatus = field(default=OperationStatus.ACTIVE)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
     in_progress_at: Optional[datetime] = field(default=None)
@@ -52,3 +52,67 @@ class Operation(AggregateRoot):
     def set_achievement(self, achievement_type: AchievementType) -> None:
         self.updated_at = datetime.now()
         self.achievement_type = achievement_type
+
+    def set_fraction(self, revenue: Money, fee: Fee) -> None:
+        self.amount = revenue
+        self.fee = fee
+
+@dataclass
+class RealStateOperation:
+    strategy_id: GenericUUID
+    property_id: GenericUUID
+    type: OperationType
+    management: Operation
+    capture: Optional[Operation] = None
+    close: Optional[Operation] = None
+
+    @property
+    def fullfilled(self) -> bool:
+        return bool(self.management and self.capture and self.close)
+
+    @property
+    def revenue(self) -> Money:
+        return self.management.amount
+
+    @property
+    def fee(self) -> Fee:
+        return self.management.fee
+
+    @property
+    def broker_fee(self) -> Fee:
+        fractions = [self.close, self.capture]
+        if any(fractions):
+            fee = sum([fraction.fee for fraction in fractions if fraction])# type: ignore
+            return self.calculate_management_fee_substracting_partner_tier(tier_partner=fee)
+        else:
+            return self.management.fee
+
+    @property
+    def broker_revenue(self) -> Money:
+        from functools import reduce
+
+        fractions = [self.close, self.capture]
+        if any(fractions):
+            partner_revenues = sum([fraction.amount for fraction in fractions if fraction])# type: ignore
+            return reduce(
+                lambda revenue, partner_revenue: revenue - partner_revenue.amount,
+                partner_revenues,
+                self.management.amount
+            )
+        else:
+            return self.management.amount
+
+    def calculate_management_fee_substracting_partner_tier(self, tier_partner: Fee) -> Fee:
+        return Fee(
+            value=(self.management.fee.value * (100 - tier_partner.value)) / 100
+        )
+
+    def calculate_partner_revenue(self, tier_partner: Fee) -> Money:
+        revenue_partner = (self.management.amount * tier_partner.value) / 100
+        return revenue_partner
+
+    def set_capture(self, operation: Operation):
+        self.capture = operation
+
+    def set_close(self, operation: Operation):
+        self.close = operation

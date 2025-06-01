@@ -70,7 +70,7 @@ def create_db_engine(config):
 def create_application(db_engine) -> Application:
     """Creates new instance of the application"""
     application = Application(
-        "RealStateManagerApp",
+        "RealEstateManagerApp",
         app_version=0.1,
         db_engine=db_engine,
     )

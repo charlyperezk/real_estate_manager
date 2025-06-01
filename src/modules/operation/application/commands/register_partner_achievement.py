@@ -25,17 +25,17 @@ async def register_partner_achievement(
     
     logger.info(f"Registering {command.achievement_type} made for partner {command.partner_id}")
 
-    if not operation_repository.has_real_state_operation_initialized(strategy_id=command.strategy_id):
-        raise ConsistencyError.real_state_operation_not_found(strategy_id=command.strategy_id)
+    if not operation_repository.has_real_estate_operation_initialized(strategy_id=command.strategy_id):
+        raise ConsistencyError.real_estate_operation_not_found(strategy_id=command.strategy_id)
     
-    rs_operation = operation_repository.get_real_state_operation(strategy_id=command.strategy_id)
+    re_operation = operation_repository.get_real_estate_operation(strategy_id=command.strategy_id)
     tier_fee = partner_fees_provider.get_fee_for(
         partner_id=command.partner_id,
         achievement_type=command.achievement_type,
-        operation_type=rs_operation.type
+        operation_type=re_operation.type
     )
 
-    consistency_service = OperationConsistencyOrchestrator(rs_operation=rs_operation)
+    consistency_service = OperationConsistencyOrchestrator(re_operation=re_operation)
     operation = consistency_service.register_achievement(
         achievement_type=command.achievement_type,
         partner_id=command.partner_id,

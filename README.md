@@ -1,6 +1,6 @@
 # Real Estate Manager (WIP)
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/charlyperezk/real_state_manager)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/charlyperezk/real_estate_manager)
 
 This project is a real estate operation management system designed to orchestrate transactions between properties, commercial strategies, and partners, following solid software design principles.
 
@@ -14,7 +14,7 @@ This project is a real estate operation management system designed to orchestrat
 
 - Management of real estate operations with state tracking (`Management`, `Capture`, `Close`)
 - Rich domain model using `Aggregates`, `Entities`, `Value Objects`, and `Domain Events`
-- Automatic evaluation of partner performance and bonus assignment
+- Automatic evaluation of partner performance
 - Proportional revenue calculation between broker and partners based on `tier` policies
 - Event-driven architecture and integration with `Lato` for dependency injection and transactional execution
 

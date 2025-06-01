@@ -5,7 +5,7 @@ from ...shared_kernel.achievement_types import AchievementType
 from ...shared_kernel.operation_types import OperationType
 from .operation_status import OperationStatus
 
-class RealStateOperationWasInitialized(DomainEvent):
+class RealEstateOperationWasInitialized(DomainEvent):
     operation_id: GenericUUID
     property_id: GenericUUID
     type: OperationType

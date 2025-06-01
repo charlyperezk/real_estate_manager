@@ -6,9 +6,9 @@ class ConsistencyError(DomainException):
         super().__init__(message)
 
     @classmethod
-    def real_state_operation_already_exists(cls, strategy_id: GenericUUID):
+    def real_estate_operation_already_exists(cls, strategy_id: GenericUUID):
         return cls(message=f"Real state operation for strategy {strategy_id} already exists")
     
     @classmethod
-    def real_state_operation_not_found(cls, strategy_id: GenericUUID):
+    def real_estate_operation_not_found(cls, strategy_id: GenericUUID):
         return cls(message=f"Real state operation for strategy {strategy_id} not found")

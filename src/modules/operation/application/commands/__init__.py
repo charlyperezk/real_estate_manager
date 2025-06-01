@@ -1,2 +1,2 @@
-from .create_real_state_operation import InitRealStateOperation, RealStateOperationWasInitialized
+from .create_real_estate_operation import InitRealEstateOperation, RealEstateOperationWasInitialized
 from .register_partner_achievement import RegisterPartnerAchievement, PartnerAchievementOperationRegistered

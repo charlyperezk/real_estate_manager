@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from dataclasses import dataclass, field
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
 from src.seedwork.domain.value_objects import Money, Fee
@@ -22,6 +22,10 @@ class Operation(AggregateRoot):
     updated_at: datetime = field(default_factory=datetime.now)
     in_progress_at: Optional[datetime] = field(default=None)
     completed_at: Optional[datetime] = field(default=None)
+
+    @property
+    def must_impact(self) -> bool:
+        return self.status in [OperationStatus.ACTIVE, OperationStatus.IN_PROGRESS, OperationStatus.PAID]
 
     def in_progress(self) -> None:
         assert self.status != OperationStatus.CANCELLED, "You cant mark as in progress the operation if the status is cancelled"
@@ -58,7 +62,7 @@ class Operation(AggregateRoot):
         self.fee = fee
 
 @dataclass
-class RealStateOperation:
+class RealEstateOperation:
     strategy_id: GenericUUID
     property_id: GenericUUID
     type: OperationType
@@ -81,7 +85,8 @@ class RealStateOperation:
     @property
     def broker_fee(self) -> Fee:
         fractions = [self.close, self.capture]
-        if any(fractions):
+        impactables = [op for op in fractions if op and op.must_impact]
+        if any(impactables):
             fee = sum([fraction.fee for fraction in fractions if fraction])# type: ignore
             return self.calculate_management_fee_substracting_partner_tier(tier_partner=fee)
         else:
@@ -92,7 +97,8 @@ class RealStateOperation:
         from functools import reduce
 
         fractions = [self.close, self.capture]
-        if any(fractions):
+        impactables = [op for op in fractions if op and op.must_impact]
+        if any(impactables):
             partner_revenues = sum([fraction.amount for fraction in fractions if fraction])# type: ignore
             return reduce(
                 lambda revenue, partner_revenue: revenue - partner_revenue.amount,
@@ -110,7 +116,7 @@ class RealStateOperation:
     def calculate_partner_revenue(self, tier_partner: Fee) -> Money:
         revenue_partner = (self.management.amount * tier_partner.value) / 100
         return revenue_partner
-
+    
     def set_capture(self, operation: Operation):
         self.capture = operation
 

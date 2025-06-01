@@ -7,8 +7,8 @@ from ...domain.entities import Partner
 from ...domain.repositories import PartnerRepository
 from ...domain.service import PartnerAchievementRegistrator
 from ....shared_kernel import AchievementType
-from ....shared_kernel.integration_events.on_after_register_partner_achievement import (
-    OnAfterRegisterPartnerAchievement
+from ....shared_kernel.integration_events.on_after_completed_partner_achievement import (
+    OnAfterCompletedPartnerAchievement
 )
 
 class RegisterAchievement(Command):
@@ -32,9 +32,9 @@ async def register_achievement(command: RegisterAchievement, partner_repository:
     return partner
 
 # Integration Handler:
-@partner_module.handler(OnAfterRegisterPartnerAchievement)
-async def on_after_register_partner_achievement(
-    event: OnAfterRegisterPartnerAchievement,
+@partner_module.handler(OnAfterCompletedPartnerAchievement)
+async def on_after_completed_partner_achievement(
+    event: OnAfterCompletedPartnerAchievement,
     ctx: TransactionContext
 ):
     await ctx.execute_async(

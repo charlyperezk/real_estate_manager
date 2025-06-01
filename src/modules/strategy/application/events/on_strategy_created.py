@@ -6,7 +6,8 @@ from ....shared_kernel.integration_events.on_after_create_strategy import OnAfte
 
 @strategy_module.handler(StrategyWasCreated)
 async def on_strategy_created(event: StrategyWasCreated, logger: Logger, ctx: TransactionContext):
-    logger.info("Reacting to StrategyWasCreated -> Publishing integration event OnAfterCreateStrategyCreateManagementOperation")
+    logger.info("Reacting to StrategyWasCreated -> " \
+    "Publishing integration event OnAfterCreateStrategy")
     
     await ctx.publish_async(
         OnAfterCreateStrategy(
@@ -14,6 +15,6 @@ async def on_strategy_created(event: StrategyWasCreated, logger: Logger, ctx: Tr
             strategy_id=event.strategy_id,
             price=event.price,
             fee=event.fee,
-            type=event.type
+            type=event.type,
         )
     )

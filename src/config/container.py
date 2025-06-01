@@ -21,6 +21,10 @@ from ..modules.strategy.infrastructure.strategy_postgres_repository import (
 )
 
 from ..modules.partner.application import partner_module
+from ..modules.partner.application.services.partner_fees_provider import (
+    PartnerFeesProvider,
+    PartnerEvaluator
+)
 from ..modules.partner.infrastructure.partner_postgres_repository import (
     PartnerPostgresJsonManagementRepository
 )
@@ -188,6 +192,11 @@ class TransactionContainer(containers.DeclarativeContainer):
     partner_repository = providers.Singleton(
         PartnerPostgresJsonManagementRepository,
         db_session=db_session,
+    )
+
+    partner_fees_provider = PartnerFeesProvider(
+        repository=partner_repository, # type: ignore
+        evaluator=PartnerEvaluator()
     )
 
     operation_repository = providers.Singleton(

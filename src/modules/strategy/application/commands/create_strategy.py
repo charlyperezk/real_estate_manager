@@ -46,7 +46,7 @@ async def create_strategy(command: CreateStrategy, strategy_repository: Strategy
             price=strategy.price,
             fee=strategy.fee,
             deposit=strategy.deposit, # type: ignore
-            terms_conditions=strategy.terms_conditions
+            terms_conditions=strategy.terms_conditions,
         )
     )    
 

@@ -6,32 +6,32 @@ from .. import partner_module
 from ...domain.entities import Partner
 from ...domain.repositories import PartnerRepository
 from ...domain.service import PartnerAchievementRegistrator
-from ....shared_kernel import AchievementType
-# from ....shared_kernel.integration_events.on_after_completed_partner_achievement import (
+from ....shared_kernel import AchievementType, Period
+# from ....shared_kernel.integration_events. ... import (
 #     ...
 # )
 
 class RemoveAchievement(Command):
     partner_id: GenericUUID
-    period: str
+    period: Period
     achievement_type: AchievementType
     revenue: Money
 
 @partner_module.handler(RemoveAchievement)
 async def remove_achievement(command: RemoveAchievement, partner_repository: PartnerRepository, logger: Logger) -> Partner:
     logger.info(f"Removing achievement from period {command.period} and re-evaluating " \
-                 "performance from partner {command.partner_id}")
+                 "performance partner {command.partner_id}")
 
     partner = partner_repository.get_by_id(entity_id=command.partner_id)
     registrator = PartnerAchievementRegistrator(partner=partner)
     registrator.remove_achievement(
-        period=command.period, #TODO: Period check
+        period=command.period,
         achievement_type=command.achievement_type,
         revenue=command.revenue
     )
     registrator.evaluate_performance()
     
-    partner_repository.add(entity=partner)
+    partner_repository.persist(entity=partner)
     return partner
 
 # Integration Handler:

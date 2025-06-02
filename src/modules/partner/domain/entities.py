@@ -12,7 +12,8 @@ from .performance import PartnerPerformance
 
 from ...shared_kernel import (
     PartnershipStatus,
-    AchievementType
+    AchievementType,
+    Period
 )
 from .rules import (
     PartnershipStatusMustNotBeAlreadyActive,
@@ -24,7 +25,8 @@ from .events import (
     PartnerWasDeactivated,
     PartnerWasBanned,
     PartnerTierWasUpdated,
-    PartnerAchievementWasRegistered
+    PartnerAchievementWasRegistered,
+    PartnerAchievementWasRemoved
 )
 
 @dataclass
@@ -52,13 +54,14 @@ class Partner(AggregateRoot):
     def get_targets_log(self) -> Dict[str, PartnerPerformance]:
         return self.targets_log.get_all()
 
-    def get_performance_by_period(self, period: str) -> PartnerPerformance:
+    def get_performance_by_period(self, period: Period) -> PartnerPerformance:
         return self.targets_log.get_or_create_period_performance(period=period)
 
-    def set_performance(self, period: str, performance: PartnerPerformance) -> None:
+    def set_performance(self, period: Period, performance: PartnerPerformance) -> None:
         self.targets_log.persist(period=period, performance=performance)
 
-    def register_achievement(self, achievement_type: AchievementType, period: str, revenue_amount: Money) -> None:
+    def register_achievement(self, achievement_type: AchievementType, 
+                             period: Period, revenue_amount: Money) -> None:
         performance = self.get_performance_by_period(period=period)
         
         if achievement_type == AchievementType.CLOSE:
@@ -71,7 +74,27 @@ class Partner(AggregateRoot):
         self.register_event(
             PartnerAchievementWasRegistered(
                 partner_id=self.id,
-                performance=performance
+                performance=performance,
+                period=period
+            )
+        )
+
+    def remove_achievement(self, achievement_type: AchievementType, 
+                             period: Period, revenue_amount: Money) -> None:
+        performance = self.get_performance_by_period(period=period)
+        
+        if achievement_type == AchievementType.CLOSE:
+            performance.remove_close(amount=revenue_amount)
+        elif achievement_type == AchievementType.CAPTURE:
+            performance.remove_capture(amount=revenue_amount)        
+        
+        self.targets_log.persist(period=period, performance=performance)
+        
+        self.register_event(
+            PartnerAchievementWasRemoved(
+                partner_id=self.id,
+                performance=performance,
+                period=period
             )
         )
 

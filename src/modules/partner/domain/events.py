@@ -1,7 +1,7 @@
 from src.seedwork.domain.value_objects import GenericUUID
 from src.seedwork.domain.events import DomainEvent
 from .enums import PartnerTier
-from ...shared_kernel import PartnershipStatus
+from ...shared_kernel import PartnershipStatus, Period
 from .performance import PartnerPerformance
 
 class PartnerCreated(DomainEvent):
@@ -27,3 +27,7 @@ class PartnerTierWasUpdated(DomainEvent):
 class PartnerAchievementWasRegistered(DomainEvent):
     partner_id: GenericUUID
     performance: PartnerPerformance
+    period: Period
+
+class PartnerAchievementWasRemoved(PartnerAchievementWasRegistered):
+    ...

@@ -7,7 +7,7 @@ from ....shared_kernel.integration_events.on_after_partner_banned import OnAfter
 @partner_module.handler(PartnerWasBanned)
 async def on_partner_finished(event: PartnerWasBanned, logger: Logger, ctx: TransactionContext):
     logger.info("Reacting to PartnerWasBanned -> Publishing " \
-    "integration event OnAfterCreatePartnerCreateOperationPartner")
+    "integration event OnAfterPartnerBanned")
     
     await ctx.publish_async(
         OnAfterPartnerBanned(

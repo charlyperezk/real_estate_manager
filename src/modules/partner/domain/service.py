@@ -3,8 +3,7 @@ from .entities import PartnerPerformance, Partner
 from .value_objects import FeePolicy
 from .enums import PartnerTier
 from .default_policies import POLICIES
-from .utils import current_period
-from ...shared_kernel import AchievementType
+from ...shared_kernel import AchievementType, Period
 from src.seedwork.domain.value_objects import Money
 from src.seedwork.domain.services import DomainService
 
@@ -27,27 +26,24 @@ class PartnerAchievementRegistrator(DomainService):
     def __init__(self, partner: Partner) -> None:
         self.partner = partner
 
-    def register_achievement(self, achievement_type: AchievementType, revenue: Money):
-        period = current_period()
+    def register_achievement(self, achievement_type: AchievementType, 
+                             revenue: Money, period: Period):
         self.partner.register_achievement(
             achievement_type=achievement_type,
             period=period,
             revenue_amount=revenue
         )
 
-    def remove_achievement(self, period: str, achievement_type: AchievementType, revenue: Money):
-        performance = self.partner.get_performance_by_period(period=period)
-
-        if achievement_type == AchievementType.CLOSE:
-            performance.remove_close(amount=revenue)
-        elif achievement_type == AchievementType.CAPTURE:
-            performance.remove_capture(amount=revenue)
-
-        self.partner.set_performance(period=period, performance=performance)
+    def remove_achievement(self, achievement_type: AchievementType, 
+                             revenue: Money, period: Period):
+        self.partner.remove_achievement(
+            achievement_type=achievement_type,
+            period=period,
+            revenue_amount=revenue
+        )
 
     def evaluate_performance(self) -> None:
-        period = current_period()
-        performance = self.partner.get_performance_by_period(period=period)
+        performance = self.partner.get_performance_by_period(period=Period.get_current_period())
         evaluator = PartnerEvaluator()
         reached_tier = evaluator.determine_tier(performance=performance)
         

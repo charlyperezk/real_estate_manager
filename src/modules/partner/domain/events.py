@@ -14,8 +14,11 @@ class PartnerWasActivated(DomainEvent):
     tier: PartnerTier
     name: str
 
-class PartnerWasBanned(PartnerWasActivated):
+class PartnerWasDeactivated(PartnerWasActivated):
     ...
+    
+class PartnerWasBanned(PartnerWasActivated):
+    review_operations: bool
 
 class PartnerTierWasUpdated(DomainEvent):
     partner_id: GenericUUID

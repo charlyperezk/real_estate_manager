@@ -11,6 +11,7 @@ async def on_partner_finished(event: PartnerWasBanned, logger: Logger, ctx: Tran
     
     await ctx.publish_async(
         OnAfterPartnerBanned(
-            partner_id=event.partner_id
+            partner_id=event.partner_id,
+            review_operations=event.review_operations
         )
     )

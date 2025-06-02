@@ -3,3 +3,4 @@ from src.seedwork.application.events import IntegrationEvent
 
 class OnAfterPartnerBanned(IntegrationEvent):
     partner_id: GenericUUID
+    review_operations: bool

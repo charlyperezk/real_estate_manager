@@ -12,6 +12,14 @@ class PartnershipStatusMustNotBeAlreadyActive(BusinessRule):
     def is_broken(self) -> bool:
         return self.status == PartnershipStatus.ACTIVE
 
+class PartnershipStatusMustNotBeAlreadyDeactivated(BusinessRule):
+    status: PartnershipStatus
+
+    _message = "Partner is already deactivated"
+
+    def is_broken(self) -> bool:
+        return self.status == PartnershipStatus.INACTIVE
+
 class PartnershipStatusMustNotBeBanned(BusinessRule):
     status: PartnershipStatus
 

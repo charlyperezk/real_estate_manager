@@ -10,6 +10,7 @@ from ....shared_kernel.integration_events.on_after_partner_banned import OnAfter
 
 class ProcessPartnerBanned(Command):
     partner_id: GenericUUID
+    review_operations: bool
 
 @operation_module.handler(ProcessPartnerBanned)
 async def set_partner_achievements_under_review(
@@ -17,7 +18,8 @@ async def set_partner_achievements_under_review(
     operation_repository: OperationRepository,
     logger: Logger
 ) -> None:
-    logger.info(f"Marking partner operations as 'Under review' → {command.partner_id}")
+    if command.review_operations:
+        logger.info(f"Marking partner operations as 'Under review' → {command.partner_id}")
 
     partner_operations: list[Operation] = operation_repository.get_operations_by_partner_id(
         partner_id=command.partner_id
@@ -29,11 +31,13 @@ async def set_partner_achievements_under_review(
     ]
 
     for operation in partner_operations_to_update:
-        operation.under_review()
+        if command.review_operations: 
+            operation.under_review()
+            logger.info(f"Updated {len(partner_operations_to_update)} operations to UNDER_REVIEW")
+        
         operation.description = "Partner was banned"
         operation_repository.persist(operation)
 
-    logger.info(f"Updated {len(partner_operations_to_update)} operations to UNDER_REVIEW")
 
 @operation_module.handler(OnAfterPartnerBanned)
 async def on_after_partner_banned(
@@ -42,6 +46,7 @@ async def on_after_partner_banned(
 ):
     await ctx.execute_async(
         ProcessPartnerBanned(
-            partner_id=event.partner_id
+            partner_id=event.partner_id,
+            review_operations=event.review_operations
         )
     )

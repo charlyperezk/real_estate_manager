@@ -35,6 +35,16 @@ class PartnerAchievementRegistrator(DomainService):
             revenue_amount=revenue
         )
 
+    def remove_achievement(self, period: str, achievement_type: AchievementType, revenue: Money):
+        performance = self.partner.get_performance_by_period(period=period)
+
+        if achievement_type == AchievementType.CLOSE:
+            performance.remove_close(amount=revenue)
+        elif achievement_type == AchievementType.CAPTURE:
+            performance.remove_capture(amount=revenue)
+
+        self.partner.set_performance(period=period, performance=performance)
+
     def evaluate_performance(self) -> None:
         period = current_period()
         performance = self.partner.get_performance_by_period(period=period)

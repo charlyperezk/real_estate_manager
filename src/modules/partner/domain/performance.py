@@ -22,11 +22,21 @@ class PartnerPerformance:
         self.revenue_generated += amount
         self.last_updated = datetime.now()
 
+    def remove_close(self, amount: Money) -> None:
+        self.operations_closed -= 1
+        self.revenue_generated -= amount
+        self.last_updated = datetime.now()
+
+    def remove_capture(self, amount: Money) -> None:
+        self.properties_captured -= 1
+        self.revenue_generated -= amount
+        self.last_updated = datetime.now()
+
     def add_revenue_generated(self, amount: Money) -> None:
         self.revenue_generated += amount
 
     def substract_revenue_generated(self, amount: Money) -> None:
-        self.revenue_generated += amount
+        self.revenue_generated -= amount
 
     def as_dict(self) -> Dict:
         return {

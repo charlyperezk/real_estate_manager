@@ -87,7 +87,7 @@ class RealEstateOperation:
         fractions = [self.close, self.capture]
         impactables = [op for op in fractions if op and op.must_impact]
         if any(impactables):
-            fee = sum([fraction.fee for fraction in fractions if fraction])# type: ignore
+            fee = sum([fraction.fee for fraction in impactables if fraction])# type: ignore
             return self.calculate_management_fee_substracting_partner_tier(tier_partner=fee)
         else:
             return self.management.fee
@@ -99,7 +99,7 @@ class RealEstateOperation:
         fractions = [self.close, self.capture]
         impactables = [op for op in fractions if op and op.must_impact]
         if any(impactables):
-            partner_revenues = sum([fraction.amount for fraction in fractions if fraction])# type: ignore
+            partner_revenues = sum([fraction.amount for fraction in impactables if fraction])# type: ignore
             return reduce(
                 lambda revenue, partner_revenue: revenue - partner_revenue.amount,
                 partner_revenues,
@@ -118,7 +118,13 @@ class RealEstateOperation:
         return revenue_partner
     
     def set_capture(self, operation: Operation):
+        assert self.capture and self.capture.must_impact, "Valid capture is setted and " \
+        "can't be overwritten" 
+            
         self.capture = operation
 
     def set_close(self, operation: Operation):
+        assert self.close and self.close.must_impact, "Valid close is setted and " \
+        "can't be overwritten" 
+
         self.close = operation

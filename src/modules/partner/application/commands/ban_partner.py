@@ -6,6 +6,7 @@ from ...domain.repositories import PartnerRepository
 
 class BanPartner(Command):
     partner_id: GenericUUID
+    review_operations: bool = True
 
 @partner_module.handler(BanPartner)
 async def ban_partner(command: BanPartner, partner_repository: PartnerRepository,

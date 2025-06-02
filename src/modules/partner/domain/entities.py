@@ -16,10 +16,12 @@ from ...shared_kernel import (
 )
 from .rules import (
     PartnershipStatusMustNotBeAlreadyActive,
+    PartnershipStatusMustNotBeAlreadyDeactivated,
     PartnershipStatusMustNotBeBanned
 )
 from .events import (
     PartnerWasActivated,
+    PartnerWasDeactivated,
     PartnerWasBanned,
     PartnerTierWasUpdated,
     PartnerAchievementWasRegistered
@@ -87,7 +89,21 @@ class Partner(AggregateRoot):
             )
         )
 
-    def ban(self) -> None:
+    def deactivate(self) -> None:
+        self.check_rule(PartnershipStatusMustNotBeAlreadyDeactivated(status=self.status))
+        
+        self.status = PartnershipStatus.INACTIVE
+        self.register_event(
+            PartnerWasDeactivated(
+                status=self.status,
+                partner_id=self.id,
+                user_id=self.user_id,
+                name=self.name,
+                tier=self.tier
+            )
+        )
+
+    def ban(self, review_operations: bool=True) -> None:
         self.check_rule(PartnershipStatusMustNotBeBanned(status=self.status))
 
         self.status = PartnershipStatus.BANNED
@@ -97,6 +113,7 @@ class Partner(AggregateRoot):
                 partner_id=self.id,
                 user_id=self.user_id,
                 name=self.name,
-                tier=self.tier
+                tier=self.tier,
+                review_operations=review_operations
             )
         )

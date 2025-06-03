@@ -13,13 +13,13 @@ class ProcessPartnerBanned(Command):
     review_operations: bool
 
 @operation_module.handler(ProcessPartnerBanned)
-async def set_partner_achievements_under_review(
+async def process_partner_banned(
     command: ProcessPartnerBanned,
     operation_repository: OperationRepository,
     logger: Logger
 ) -> None:
     if command.review_operations:
-        logger.info(f"Marking partner operations as 'Under review' → {command.partner_id}")
+        logger.info(f"Updating partner operations as 'Under review' → {command.partner_id}")
 
     partner_operations: list[Operation] = operation_repository.get_operations_by_partner_id(
         partner_id=command.partner_id

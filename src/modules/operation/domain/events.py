@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.seedwork.domain.value_objects import GenericUUID, Money
+from src.seedwork.domain.value_objects import GenericUUID, Money, Period
 from src.seedwork.domain.events import DomainEvent
 from ...shared_kernel.achievement_types import AchievementType
 from ...shared_kernel.operation_types import OperationType
@@ -24,3 +24,4 @@ class PartnerAchievementOperationRegistered(DomainEvent):
     created_at: datetime
     description: str
     revenue: Money
+    period: Period

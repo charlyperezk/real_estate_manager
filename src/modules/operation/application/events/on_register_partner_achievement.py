@@ -16,6 +16,7 @@ async def on_register_partner_achievement(event: PartnerAchievementOperationRegi
         OnAfterRegisterPartnerAchievement(
             achievement_type=event.achievement_type,
             partner_id=event.partner_id,
-            revenue=event.revenue
+            revenue=event.revenue,
+            period=event.period
         )
     )

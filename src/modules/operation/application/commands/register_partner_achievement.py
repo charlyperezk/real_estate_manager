@@ -1,5 +1,5 @@
 from src.seedwork.application.commands import Command
-from src.seedwork.domain.value_objects import GenericUUID, Fee
+from src.seedwork.domain.value_objects import GenericUUID, Fee, Period
 from src.seedwork.infrastructure.logging import Logger
 from .. import operation_module
 from ...domain.entities import Operation, AchievementType
@@ -53,7 +53,8 @@ async def register_partner_achievement(
             status=operation.status,
             created_at=operation.created_at,
             description=operation.description,
-            revenue=operation.amount
+            revenue=operation.amount,
+            period=Period.get_current_period()
         )
     )
 

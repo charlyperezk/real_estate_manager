@@ -1,5 +1,6 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from dataclasses import dataclass, field
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
 from src.seedwork.domain.value_objects import Money, Fee
@@ -128,3 +129,31 @@ class RealEstateOperation:
         "can't be overwritten" 
 
         self.close = operation
+
+    @classmethod
+    def from_operations(cls, operations: List[Operation]) -> RealEstateOperation:
+        management = next((op for op in operations if op.achievement_type == AchievementType.MANAGEMENT), None)
+        assert management, "Management operation not found"
+        
+        re_operation = cls(
+            property_id=management.property_id,
+            strategy_id=management.strategy_id,
+            type=management.type,
+            management=management
+        )
+
+        others = [op for op in operations if op.achievement_type != AchievementType.MANAGEMENT]
+        assert all([op.strategy_id == management.strategy_id for
+                     op in others]), "All operations must belong to the same strategy"
+
+        if any(others):
+            for op in others:
+                if op.achievement_type == AchievementType.CLOSE:
+                    if not re_operation.close or re_operation.close and not re_operation.close.must_impact:
+                        re_operation.set_close(operation=op)
+
+                elif op.achievement_type == AchievementType.CAPTURE:
+                    if not re_operation.capture or re_operation.capture and not re_operation.capture.must_impact:
+                        re_operation.set_capture(operation=op)
+
+        return re_operation

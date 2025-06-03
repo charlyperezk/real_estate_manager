@@ -42,6 +42,9 @@ class PartnerPerformance:
         self.last_updated = datetime.now()
 
     def substract_revenue_generated(self, amount: Money) -> None:
+        assert self.revenue_generated > amount, "Amount to substract must be greather " \
+        "than revenue generated"
+
         self.revenue_generated -= amount
         self.last_updated = datetime.now()
 

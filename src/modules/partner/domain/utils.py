@@ -1,16 +1,17 @@
-from datetime import datetime
-import calendar
+from typing import List, Optional
+from .entities import PartnerPerformance
+from ...shared_kernel import Period
 
-# Hoy
-now = datetime.now()
-
-# Primer día del mes
-
-start_date = datetime(now.year, now.month, 1)
-
-# Último día del mes
-last_day = calendar.monthrange(now.year, now.month)[1]
-end_date = datetime(now.year, now.month, last_day, 23, 59, 59, 999999)
-
-def current_period() -> str:
-    return datetime.now().strftime("%Y-%m")
+class PartnerPerformanceOperations:
+    @staticmethod    
+    def get_performances_inside_period(
+        performances: List[PartnerPerformance], 
+        start: Optional[Period]=None,
+        end: Optional[Period]=None
+    ) -> List[PartnerPerformance]:
+        if start and end:
+            assert start < end, "Start period must be earlier than end"
+        
+        start = start or Period(year=2020, month=4)
+        end = end or Period.get_current_period()
+        return [perf for perf in performances if perf.period.inside_range_period(start=start, end=end)]

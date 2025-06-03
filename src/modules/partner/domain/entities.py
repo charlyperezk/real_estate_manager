@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Optional, List
 from src.seedwork.domain.value_objects import Money
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
 from .default_policies import POLICIES
@@ -9,6 +9,7 @@ from .value_objects import FeePolicy
 from .enums import PartnerTier
 from .targets_log import TargetsLog
 from .performance import PartnerPerformance
+from .utils import PartnerPerformanceOperations
 
 from ...shared_kernel import (
     PartnershipStatus,
@@ -51,8 +52,19 @@ class Partner(AggregateRoot):
             )
         )
 
-    def get_targets_log(self) -> Dict[str, PartnerPerformance]:
-        return self.targets_log.get_all()
+    def get_performances(self) -> List[PartnerPerformance]:
+        return list(self.targets_log.get_all().values())
+
+    def get_performances_by_period_range(
+            self,
+            start: Optional[Period]=None,
+            end: Optional[Period]=None
+    ) -> List[PartnerPerformance]:
+        return PartnerPerformanceOperations.get_performances_inside_period(
+            performances=self.get_performances(),
+            start=start,
+            end=end
+        )
 
     def get_performance_by_period(self, period: Period) -> PartnerPerformance:
         return self.targets_log.get_or_create_period_performance(period=period)

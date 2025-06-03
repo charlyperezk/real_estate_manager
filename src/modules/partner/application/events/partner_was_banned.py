@@ -5,7 +5,7 @@ from ...domain.events import PartnerWasBanned
 from ....shared_kernel.integration_events.on_after_partner_banned import OnAfterPartnerBanned
 
 @partner_module.handler(PartnerWasBanned)
-async def on_partner_finished(event: PartnerWasBanned, logger: Logger, ctx: TransactionContext):
+async def on_partner_banned(event: PartnerWasBanned, logger: Logger, ctx: TransactionContext):
     logger.info("Reacting to PartnerWasBanned -> Publishing " \
     "integration event OnAfterPartnerBanned")
     

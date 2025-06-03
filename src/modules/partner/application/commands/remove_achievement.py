@@ -19,8 +19,8 @@ class RemoveAchievement(Command):
 
 @partner_module.handler(RemoveAchievement)
 async def remove_achievement(command: RemoveAchievement, partner_repository: PartnerRepository, logger: Logger) -> Partner:
-    logger.info(f"Removing achievement from period {command.period} and re-evaluating " \
-                 "performance partner {command.partner_id}")
+    logger.info(f"Removing achievement from period {command.period.representation()} and re-evaluating " \
+                 f"performance partner {command.partner_id}")
 
     partner = partner_repository.get_by_id(entity_id=command.partner_id)
     registrator = PartnerAchievementRegistrator(partner=partner)

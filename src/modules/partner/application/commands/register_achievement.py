@@ -20,7 +20,8 @@ class RegisterAchievement(Command):
 @partner_module.handler(RegisterAchievement)
 async def register_achievement(command: RegisterAchievement, partner_repository: PartnerRepository,
                                 logger: Logger) -> Partner:
-    logger.info(f"Registering achievement and evaluating performance partner {command.partner_id}")
+    logger.info(f"Registering achievement from period {command.period.representation()} and evaluating " \
+                 f"performance partner {command.partner_id}")
 
     partner = partner_repository.get_by_id(entity_id=command.partner_id)
     registrator = PartnerAchievementRegistrator(partner=partner)

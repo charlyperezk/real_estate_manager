@@ -3,6 +3,7 @@ import calendar
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from .value_objects import ValueObject
+from .period import Period
 
 @dataclass(frozen=True)
 class DateRange(ValueObject):

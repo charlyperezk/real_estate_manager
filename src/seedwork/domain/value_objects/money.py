@@ -39,4 +39,7 @@ class Money(ValueObject):
 
     def calculate_fee(self, fee: Fee) -> Money:        
         amount = (self.amount * fee.value) / 100
-        return Money(amount=amount, currency=self.currency)    
+        return Money(amount=amount, currency=self.currency)
+    
+    def convert(self, to_currency: Currency, price: float) -> Money:
+        return Money(amount=self.amount / price, currency=to_currency)

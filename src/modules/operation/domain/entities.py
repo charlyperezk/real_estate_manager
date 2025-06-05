@@ -7,6 +7,11 @@ from src.seedwork.domain.value_objects import Money, Fee
 from ...shared_kernel import OperationType
 from ...shared_kernel.achievement_types import AchievementType
 from .operation_status import OperationStatus
+from .rules import (
+    OperationMustNotBeUnderReview,
+    OperationMustNotBeCancelled,
+    AchievementTypeMustChange
+)
 
 @dataclass
 class Operation(AggregateRoot):
@@ -29,32 +34,39 @@ class Operation(AggregateRoot):
         return self.status in [OperationStatus.ACTIVE, OperationStatus.IN_PROGRESS, OperationStatus.PAID]
 
     def in_progress(self) -> None:
-        assert self.status != OperationStatus.CANCELLED, "You cant mark as in progress the operation if the status is cancelled"
+        self.check_rule(OperationMustNotBeCancelled(status=self.status))
 
         self.in_progress_at = datetime.now()
         self.updated_at = datetime.now()
         self.status = OperationStatus.IN_PROGRESS
 
     def paid(self) -> None:
-        assert self.status != OperationStatus.CANCELLED, "You cant mark as paid the operation if the status is cancelled"
+        self.check_rule(OperationMustNotBeCancelled(status=self.status))
         
         self.updated_at = datetime.now()
         self.completed_at = datetime.now()
         self.status = OperationStatus.PAID
     
     def under_review(self) -> None:
-        assert self.status != OperationStatus.UNDER_REVIEW, "Status is already under review"
+        self.check_rule(OperationMustNotBeUnderReview(status=self.status))
         
         self.updated_at = datetime.now()
         self.status = OperationStatus.UNDER_REVIEW
 
     def cancel(self) -> None:
-        assert self.status != OperationStatus.CANCELLED, "The operation status is already cancelled"
+        self.check_rule(OperationMustNotBeCancelled(status=self.status))
         
         self.updated_at = datetime.now()
         self.status = OperationStatus.CANCELLED
 
     def set_achievement(self, achievement_type: AchievementType) -> None:
+        self.check_rule(
+            AchievementTypeMustChange(
+                achievement_type=achievement_type,
+                actual_achievement_type=self.achievement_type
+            )
+        )
+        
         self.updated_at = datetime.now()
         self.achievement_type = achievement_type
 

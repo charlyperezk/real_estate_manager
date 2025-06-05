@@ -22,4 +22,4 @@ async def get_real_estate_operation(
     
     operations = operation_repository.get_operations_by_strategy_id(strategy_id=query.strategy_id)
     
-    return RealEstateOperation.from_operations(operations=operations)    
+    return RealEstateOperation.from_operations(operations=operations)

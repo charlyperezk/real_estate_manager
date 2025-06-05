@@ -81,5 +81,3 @@ class OperationsAnalytics(DomainService):
                 dict_partner_id_revenue[operation.partner_id] = operation.amount
 
         return dict_partner_id_revenue
-    
-    def get_average_close_time(self): ...

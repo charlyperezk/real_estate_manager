@@ -51,7 +51,7 @@ class PartnerAchievementRegistrator(DomainService):
             fee_policies = evaluator.get_fee_policies(tier=reached_tier)
             self.partner.set_tier_and_fee_policies(tier=reached_tier, fee_policies=fee_policies)
 
-class PartnersInsights(DomainService):
+class PartnersPerformanceInsights(DomainService):
     def __init__(self, partners: List[Partner]) -> None:
         self.partners = partners
 

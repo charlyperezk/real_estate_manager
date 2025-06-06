@@ -8,7 +8,7 @@ from ...domain.repositories import OperationRepository
 from ...domain.events import RealEstateOperationWasInitialized
 from ...domain.exceptions import ConsistencyError
 from ...domain.service import OperationConsistencyOrchestrator
-from ....shared_kernel.integration_events.on_after_create_strategy import OnAfterCreateStrategy
+from ....shared_kernel.integration_events.on_after_activate_strategy import OnAfterActivateStrategy
 
 class InitRealEstateOperation(Command):
     property_id: GenericUUID
@@ -54,9 +54,9 @@ async def init_real_estate_operation(
     return management_operation
 
 # Integration Handler:
-@operation_module.handler(OnAfterCreateStrategy)
+@operation_module.handler(OnAfterActivateStrategy)
 async def on_after_create_strategy_init_real_estate_operation(
-    event: OnAfterCreateStrategy,
+    event: OnAfterActivateStrategy,
     ctx: TransactionContext
 ):
     await ctx.execute_async(

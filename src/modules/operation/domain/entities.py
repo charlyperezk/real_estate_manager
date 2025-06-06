@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Callable, Any
 from dataclasses import dataclass, field
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
 from src.seedwork.domain.value_objects import Money, Fee
@@ -12,6 +12,7 @@ from .rules import (
     OperationMustNotBeCancelled,
     AchievementTypeMustChange
 )
+from .exceptions import ConsistencyError
 
 @dataclass
 class Operation(AggregateRoot):
@@ -88,6 +89,10 @@ class RealEstateOperation:
         return bool(self.management and self.capture and self.close)
 
     @property
+    def operations(self) -> List[Operation]:
+        return [op for op in (self.management, self.close, self.capture) if op and op.must_impact]
+
+    @property
     def revenue(self) -> Money:
         return self.management.amount
 
@@ -97,8 +102,7 @@ class RealEstateOperation:
 
     @property
     def broker_fee(self) -> Fee:
-        fractions = [self.close, self.capture]
-        impactables = [op for op in fractions if op and op.must_impact]
+        impactables = [op for op in self.operations if op.achievement_type != AchievementType.MANAGEMENT]
         if any(impactables):
             fee = sum([fraction.fee for fraction in impactables if fraction])# type: ignore
             return self.calculate_management_fee_substracting_partner_tier(tier_partner=fee)
@@ -109,8 +113,7 @@ class RealEstateOperation:
     def broker_revenue(self) -> Money:
         from functools import reduce
 
-        fractions = [self.close, self.capture]
-        impactables = [op for op in fractions if op and op.must_impact]
+        impactables = [op for op in self.operations if op.achievement_type != AchievementType.MANAGEMENT]
         if any(impactables):
             partner_revenues = sum([fraction.amount for fraction in impactables if fraction])# type: ignore
             return reduce(
@@ -131,21 +134,43 @@ class RealEstateOperation:
         return revenue_partner
     
     def set_capture(self, operation: Operation):
-        assert self.capture and self.capture.must_impact, "Valid capture is setted and " \
-        "can't be overwritten" 
-            
+        if operation.achievement_type != AchievementType.CAPTURE:
+            raise ConsistencyError.operation_with_wrong_achievement_type_received(
+                desired_achievement_type=AchievementType.CAPTURE
+            )
+
+        if self.capture and self.capture.must_impact:
+            raise ConsistencyError.valid_achievement_operation_already_setted(
+                achievement_type=operation.achievement_type
+            )
+
         self.capture = operation
 
     def set_close(self, operation: Operation):
-        assert self.close and self.close.must_impact, "Valid close is setted and " \
-        "can't be overwritten" 
+        if operation.achievement_type != AchievementType.CLOSE:
+            raise ConsistencyError.operation_with_wrong_achievement_type_received(
+                desired_achievement_type=AchievementType.CLOSE
+            )
+
+        if self.capture and self.capture.must_impact:
+            raise ConsistencyError.valid_achievement_operation_already_setted(
+                achievement_type=operation.achievement_type
+            )
 
         self.close = operation
+
+    def map_operations(self, func: Callable[[Operation], Any]) -> List[Any]:
+        return [func(op) for op in self.operations]
+
+    def under_review(self) -> None:        
+        for op in self.operations:
+            op.under_review()
 
     @classmethod
     def from_operations(cls, operations: List[Operation]) -> RealEstateOperation:
         management = next((op for op in operations if op.achievement_type == AchievementType.MANAGEMENT), None)
-        assert management, "Management operation not found"
+        if not management:
+            raise ConsistencyError.management_operation_not_found()
         
         re_operation = cls(
             property_id=management.property_id,
@@ -155,9 +180,9 @@ class RealEstateOperation:
         )
 
         others = [op for op in operations if op.achievement_type != AchievementType.MANAGEMENT]
-        assert all([op.strategy_id == management.strategy_id for
-                     op in others]), "All operations must belong to the same strategy"
-
+        if not all([op.strategy_id == management.strategy_id for op in others]):
+            raise ConsistencyError.foreign_operations_found()
+        
         if any(others):
             for op in others:
                 if op.achievement_type == AchievementType.CLOSE:

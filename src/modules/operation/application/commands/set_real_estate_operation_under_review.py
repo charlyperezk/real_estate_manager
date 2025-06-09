@@ -29,7 +29,7 @@ async def set_real_estate_operation_under_review(
 
 
 @operation_module.handler(OnAfterDiscontinueStrategy)
-async def on_after_partner_discontinue_strategy(
+async def on_after_discontinue_strategy(
     event: OnAfterDiscontinueStrategy,
     ctx: TransactionContext
 ):

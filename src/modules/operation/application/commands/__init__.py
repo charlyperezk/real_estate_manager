@@ -1,2 +1,4 @@
 from .create_real_estate_operation import InitRealEstateOperation, RealEstateOperationWasInitialized
 from .register_partner_achievement import RegisterPartnerAchievement, PartnerAchievementOperationRegistered
+from .process_partner_banned import ProcessPartnerBanned
+from .set_real_estate_operation_under_review import SetRealEstateOperationUnderReview

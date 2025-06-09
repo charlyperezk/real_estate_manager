@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, List, Callable, Any
 from dataclasses import dataclass, field
 from src.seedwork.domain.entities import GenericUUID, AggregateRoot
-from src.seedwork.domain.value_objects import Money, Fee
+from src.seedwork.domain.value_objects import Money, Fee, Period
 from ...shared_kernel import OperationType
 from ...shared_kernel.achievement_types import AchievementType
 from .operation_status import OperationStatus
@@ -11,6 +11,9 @@ from .rules import (
     OperationMustNotBeUnderReview,
     OperationMustNotBeCancelled,
     AchievementTypeMustChange
+)
+from .events import (
+    OperationStatusChangedToInProgress
 )
 from .exceptions import ConsistencyError
 
@@ -36,16 +39,28 @@ class Operation(AggregateRoot):
 
     def in_progress(self) -> None:
         self.check_rule(OperationMustNotBeCancelled(status=self.status))
+        now = datetime.now()
 
-        self.in_progress_at = datetime.now()
-        self.updated_at = datetime.now()
+        self.in_progress_at = now
+        self.updated_at = now
         self.status = OperationStatus.IN_PROGRESS
+
+        self.register_event(
+            OperationStatusChangedToInProgress(
+                partner_id=self.partner_id,
+                achievement_type=self.achievement_type,
+                revenue=self.amount,
+                fee=self.fee,
+                period=Period(year=now.year, month=now.month)
+            )
+        )
 
     def paid(self) -> None:
         self.check_rule(OperationMustNotBeCancelled(status=self.status))
-        
-        self.updated_at = datetime.now()
-        self.completed_at = datetime.now()
+        now = datetime.now()
+
+        self.updated_at = now
+        self.completed_at = now
         self.status = OperationStatus.PAID
     
     def under_review(self) -> None:
@@ -91,6 +106,10 @@ class RealEstateOperation:
     @property
     def operations(self) -> List[Operation]:
         return [op for op in (self.management, self.close, self.capture) if op and op.must_impact]
+
+    @property
+    def completed(self) -> bool:
+        return all((op.status == OperationStatus.PAID for op in self.operations)) and self.fullfilled
 
     @property
     def revenue(self) -> Money:
@@ -165,6 +184,10 @@ class RealEstateOperation:
     def under_review(self) -> None:        
         for op in self.operations:
             op.under_review()
+    
+    def in_progress(self) -> None:
+        for op in self.operations:
+            op.in_progress()
 
     @classmethod
     def from_operations(cls, operations: List[Operation]) -> RealEstateOperation:

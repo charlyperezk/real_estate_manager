@@ -1,0 +1,1 @@
+from .on_register_partner_achievement import OnAfterRegisterPartnerAchievement
